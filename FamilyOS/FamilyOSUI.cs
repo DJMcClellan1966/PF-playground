@@ -9,6 +9,10 @@ namespace PocketFence.FamilyOS.UI
     /// </summary>
     public static class FamilyOSUI
     {
+        // ASCII-only output toggle
+        public static bool UseAscii { get; private set; } = false;
+        public static void EnableAscii() { UseAscii = true; }
+
         // Color schemes for different user types
         private static readonly Dictionary<string, ConsoleColor> UserTypeColors = new()
         {
@@ -29,13 +33,67 @@ namespace PocketFence.FamilyOS.UI
         };
 
         // Modern box drawing characters
-        private const string TopLeft = "╭";
-        private const string TopRight = "╮";
-        private const string BottomLeft = "╰";
-        private const string BottomRight = "╯";
-        private const string Horizontal = "─";
-        private const string Vertical = "│";
-        private const string Cross = "┼";
+        private static string TopLeft => UseAscii ? "+" : "╭";
+        private static string TopRight => UseAscii ? "+" : "╮";
+        private static string BottomLeft => UseAscii ? "+" : "╰";
+        private static string BottomRight => UseAscii ? "+" : "╯";
+        private static string Horizontal => UseAscii ? "-" : "─";
+        private static string Vertical => UseAscii ? "|" : "│";
+        private static string Cross => UseAscii ? "+" : "┼";
+
+        private static string Sanitize(string s)
+        {
+            if (!UseAscii || string.IsNullOrEmpty(s)) return s;
+            // Map common emojis/icons to ASCII tokens
+            var map = new Dictionary<string, string>
+            {
+                { "🏠", "[HOME]" },
+                { "🛡️", "[SECURITY]" },
+                { "🔐", "[AUTH]" },
+                { "⚠️", "[WARN]" },
+                { "✅", "[OK]" },
+                { "❌", "[ERR]" },
+                { "🎉", "[DONE]" },
+                { "👨‍👩‍👧‍👦", "[FAMILY]" },
+                { "📊", "[STATS]" },
+                { "🔧", "[CONFIG]" },
+                { "📋", "[LIST]" },
+                { "⏱️", "[TIME]" },
+                { "📱", "[APPS]" },
+                { "🔍", "[SEARCH]" },
+                { "🔓", "[UNLOCK]" },
+                { "🕒", "[CLOCK]" },
+                { "🚪", "[EXIT]" },
+                { "🔄", "[RETRY]" },
+                { "🎯", "[SELECT]" },
+                { "🥷", "[STEALTH]" },
+                { "👧", "[CHILD]" },
+                { "🖥️", "[WINDOWS DEMO]" },
+                { "🟢", "[ON]" },
+                { "⚫", "[OFF]" },
+                { "🌐", "[BROWSER]" },
+                { "📚", "[EDU]" },
+                { "🎮", "[GAMES]" },
+                { "💬", "[CHAT]" },
+                { "📁", "[FILES]" }
+            };
+            foreach (var kv in map)
+            {
+                s = s.Replace(kv.Key, kv.Value);
+            }
+            // Replace box characters just in case
+            s = s.Replace("╭", "+").Replace("╮", "+").Replace("╰", "+").Replace("╯", "+")
+                 .Replace("─", "-").Replace("│", "|").Replace("┼", "+");
+            return s;
+        }
+
+        private static void WriteAsciiAware(string s, ConsoleColor? color = null)
+        {
+            var msg = Sanitize(s);
+            if (color.HasValue) Console.ForegroundColor = color.Value;
+            Console.WriteLine(msg);
+            if (color.HasValue) Console.ResetColor();
+        }
 
         /// <summary>
         /// Clear screen and display animated welcome header
@@ -45,7 +103,7 @@ namespace PocketFence.FamilyOS.UI
             Console.Clear();
             
             // Animated header display
-            var title = "🏠 PocketFence FamilyOS";
+            var title = UseAscii ? "PocketFence FamilyOS" : "🏠 PocketFence FamilyOS";
             var subtitle = "Safe Computing Environment for the Whole Family";
             
             WriteColoredLine("", ConsoleColor.White);
@@ -66,12 +124,12 @@ namespace PocketFence.FamilyOS.UI
         {
             var features = new[]
             {
-                ("🛡️", "Enterprise-Grade Security", ConsoleColor.Red),
-                ("📚", "Educational Content Priority", ConsoleColor.Blue),
-                ("⏰", "Smart Screen Time Management", ConsoleColor.Yellow),
-                ("👨‍👩‍👧‍👦", "Family-Friendly Interface", ConsoleColor.Green),
-                ("🎯", "Age-Appropriate Content", ConsoleColor.Cyan),
-                ("🔒", "Privacy Protection Built-In", ConsoleColor.Magenta)
+                (UseAscii ? "[SECURITY]" : "🛡️", "Enterprise-Grade Security", ConsoleColor.Red),
+                (UseAscii ? "[EDU]" : "📚", "Educational Content Priority", ConsoleColor.Blue),
+                (UseAscii ? "[TIME]" : "⏰", "Smart Screen Time Management", ConsoleColor.Yellow),
+                (UseAscii ? "[FAMILY]" : "👨‍👩‍👧‍👦", "Family-Friendly Interface", ConsoleColor.Green),
+                (UseAscii ? "[SELECT]" : "🎯", "Age-Appropriate Content", ConsoleColor.Cyan),
+                (UseAscii ? "[AUTH]" : "🔒", "Privacy Protection Built-In", ConsoleColor.Magenta)
             };
 
             foreach (var (icon, text, color) in features)
@@ -89,11 +147,11 @@ namespace PocketFence.FamilyOS.UI
         public static void ShowLoginInterface()
         {
             Console.Clear();
-            WriteBoxedTitle("🔐 FamilyOS Login", ConsoleColor.Blue);
+            WriteBoxedTitle(UseAscii ? "[AUTH] FamilyOS Login" : "🔐 FamilyOS Login", ConsoleColor.Blue);
             WriteColoredLine("", ConsoleColor.White);
             
             // Display available accounts with visual styling
-            WriteColoredLine("👨‍👩‍👧‍👦 Family Members Available:", ConsoleColor.Cyan);
+            WriteColoredLine(UseAscii ? "[FAMILY] Family Members Available:" : "👨‍👩‍👧‍👦 Family Members Available:", ConsoleColor.Cyan);
             WriteIndented("Parents: mom, dad", 2, ConsoleColor.Blue);
             WriteIndented("Children: sarah, alex", 2, ConsoleColor.Green);
             WriteColoredLine("", ConsoleColor.White);
@@ -109,8 +167,7 @@ namespace PocketFence.FamilyOS.UI
             // User-specific header color
             var userColor = GetUserColor(ageGroup, role);
             var headerIcon = GetUserIcon(ageGroup, role);
-            
-            WriteBoxedTitle($"{headerIcon} Welcome, {userName}!", userColor);
+            WriteBoxedTitle($"{Sanitize(headerIcon)} Welcome, {userName}!", userColor);
             
             // User info panel
             WriteUserInfoPanel(ageGroup, role, lastLogin, userColor);
@@ -141,17 +198,17 @@ namespace PocketFence.FamilyOS.UI
         /// </summary>
         private static void ShowApplicationsMenu()
         {
-            WriteColoredLine("📱 Available Applications", ConsoleColor.Yellow);
+            WriteColoredLine(UseAscii ? "[APPS] Available Applications" : "📱 Available Applications", ConsoleColor.Yellow);
             WriteColoredLine("═══════════════════════", ConsoleColor.Yellow);
             
             var apps = new[]
             {
-                ("1", "🌐", "Safe Browser", "Secure internet browsing with content filtering"),
-                ("2", "📚", "Educational Hub", "Learning resources and educational content"),
-                ("3", "🎮", "Family Game Center", "Age-appropriate games and entertainment"),
-                ("4", "💬", "Family Chat", "Secure family communication platform"),
-                ("5", "📁", "Family File Manager", "Organize and share family files safely"),
-                ("6", "⏰", "Screen Time Manager", "Monitor and manage screen time usage")
+                ("1", UseAscii ? "[BROWSER]" : "🌐", "Safe Browser", "Secure internet browsing with content filtering"),
+                ("2", UseAscii ? "[EDU]" : "📚", "Educational Hub", "Learning resources and educational content"),
+                ("3", UseAscii ? "[GAMES]" : "🎮", "Family Game Center", "Age-appropriate games and entertainment"),
+                ("4", UseAscii ? "[CHAT]" : "💬", "Family Chat", "Secure family communication platform"),
+                ("5", UseAscii ? "[FILES]" : "📁", "Family File Manager", "Organize and share family files safely"),
+                ("6", UseAscii ? "[TIME]" : "⏰", "Screen Time Manager", "Monitor and manage screen time usage")
             };
 
             foreach (var (num, icon, name, desc) in apps)
@@ -167,16 +224,16 @@ namespace PocketFence.FamilyOS.UI
         /// </summary>
         private static void ShowSystemOptionsMenu(string role)
         {
-            WriteColoredLine("🛠️  System Options", ConsoleColor.Cyan);
+            WriteColoredLine(UseAscii ? "[CONFIG] System Options" : "🛠️  System Options", ConsoleColor.Cyan);
             WriteColoredLine("═════════════════", ConsoleColor.Cyan);
             
-            WriteMenuOption("7", "📊 System Status", "View system health and statistics", ConsoleColor.Cyan);
-            WriteMenuOption("8", "🔐 Change Password", "Update your account password", ConsoleColor.Cyan);
+            WriteMenuOption("7", UseAscii ? "[STATS] System Status" : "📊 System Status", "View system health and statistics", ConsoleColor.Cyan);
+            WriteMenuOption("8", UseAscii ? "[AUTH] Change Password" : "🔐 Change Password", "Update your account password", ConsoleColor.Cyan);
             
             if (role == "Parent")
             {
-                WriteMenuOption("9", "👨‍👩‍👧‍👦 Family Management", "Manage family members and settings (Parent Only)", ConsoleColor.Red);
-                WriteMenuOption("10", "🔧 Password Management", "Manage family passwords and security (Parent Only)", ConsoleColor.Red);
+                WriteMenuOption("9", UseAscii ? "[FAMILY] Family Management" : "👨‍👩‍👧‍👦 Family Management", "Manage family members and settings (Parent Only)", ConsoleColor.Red);
+                WriteMenuOption("10", UseAscii ? "[CONFIG] Password Management" : "🔧 Password Management", "Manage family passwords and security (Parent Only)", ConsoleColor.Red);
             }
             
             WriteColoredLine("", ConsoleColor.White);
@@ -187,12 +244,12 @@ namespace PocketFence.FamilyOS.UI
         /// </summary>
         private static void ShowNavigationOptions(string role)
         {
-            WriteColoredLine("🚪 Navigation", ConsoleColor.Magenta);
+            WriteColoredLine(UseAscii ? "[EXIT] Navigation" : "🚪 Navigation", ConsoleColor.Magenta);
             WriteColoredLine("═══════════", ConsoleColor.Magenta);
             
             var switchOption = role == "Parent" ? "11" : "9";
-            WriteMenuOption(switchOption, "🔄 Switch User", "Log in as different family member", ConsoleColor.Magenta);
-            WriteMenuOption("0", "❌ Exit FamilyOS", "Close the application safely", ConsoleColor.Red);
+            WriteMenuOption(switchOption, UseAscii ? "[RETRY] Switch User" : "🔄 Switch User", "Log in as different family member", ConsoleColor.Magenta);
+            WriteMenuOption("0", UseAscii ? "[ERR] Exit FamilyOS" : "❌ Exit FamilyOS", "Close the application safely", ConsoleColor.Red);
         }
 
         /// <summary>
@@ -214,7 +271,7 @@ namespace PocketFence.FamilyOS.UI
         /// </summary>
         public static async Task ShowLoadingAsync(string message, int durationMs = 2000)
         {
-            var spinner = new[] { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" };
+            var spinner = UseAscii ? new[] { "-", "\\", "|", "/" } : new[] { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" };
             var startTime = DateTime.Now;
             var index = 0;
 

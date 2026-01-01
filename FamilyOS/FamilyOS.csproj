@@ -21,6 +21,9 @@
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <StripSymbols>false</StripSymbols>
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <!-- JIT/Tiered PGO startup optimizations -->
+    <TieredCompilation>true</TieredCompilation>
+    <TieredPGO>true</TieredPGO>
     
     <!-- Aggressive Optimization (GPT4All Style) -->
     <OptimizationPreference>Speed</OptimizationPreference>
@@ -55,6 +58,8 @@
     <ServerGarbageCollection>false</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <RetainVMGarbageCollection>false</RetainVMGarbageCollection>
+    <!-- ReadyToRun native images for faster startup when publishing -->
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>

@@ -7,6 +7,7 @@ using PocketFence.FamilyOS.Apps;
 using PocketFence.FamilyOS.UI;
 using PocketFence.FamilyOS.Examples;
 using System;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
@@ -20,6 +21,11 @@ namespace PocketFence.FamilyOS
     {
         static async Task Main(string[] args)
         {
+            // ASCII-only output flag
+            if (args.Any(a => a.Equals("--ascii", StringComparison.OrdinalIgnoreCase)))
+            {
+                FamilyOSUI.EnableAscii();
+            }
             // Performance optimization tests mode
             if (args.Length > 0 && args[0].Equals("--perf-opt", StringComparison.OrdinalIgnoreCase))
             {

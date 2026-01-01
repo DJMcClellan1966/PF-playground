@@ -47,12 +47,12 @@ try {
     # Smoke test
     $exe = Join-Path $publishPath 'FamilyOS.exe'
     if (Test-Path $exe) {
-        Write-Info "Smoke test: $exe --demo-windows"
-        & $exe --demo-windows | Out-Host
+        Write-Info "Smoke test: $exe --demo-windows --ascii"
+        & $exe --demo-windows --ascii | Out-Host
         Write-Ok "Smoke test completed"
 
-        Write-Info "Perf suite: $exe --perf-opt"
-        & $exe --perf-opt | Out-Host
+        Write-Info "Perf suite: $exe --perf-opt --ascii"
+        & $exe --perf-opt --ascii | Out-Host
         Write-Ok "Perf suite completed"
     } else {
         Write-Warn "FamilyOS.exe not found at publish output"
