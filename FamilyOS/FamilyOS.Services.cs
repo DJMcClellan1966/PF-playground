@@ -7,6 +7,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using PocketFence.FamilyOS.Core;
+using System.Linq;
 
 namespace PocketFence.FamilyOS.Services
 {

@@ -1,5 +1,7 @@
 # Simple Performance Test for PocketFence Kernel
 # ==============================================
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '')]
+param()
 
 Write-Host "🔥 PocketFence Kernel Performance Test" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan

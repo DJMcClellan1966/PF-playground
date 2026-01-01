@@ -119,7 +119,8 @@ namespace PocketFence.FamilyOS
                         currentUser = await AuthenticateUserAsync(kernel);
                         if (currentUser == null)
                         {
-                            Console.WriteLine("❌ Authentication failed. Please try again.");
+                            Console.WriteLine("🏠 Returning to welcome screen...");
+                            await Task.Delay(1000);
                             continue;
                         }
                     }
@@ -164,8 +165,17 @@ namespace PocketFence.FamilyOS
                             }
                             break;
                         case "9":
-                            Console.WriteLine($"👋 Goodbye, {currentUser.DisplayName}!");
-                            currentUser = null;
+                            // Check if non-adult user is trying to switch to potentially adult account
+                            if (currentUser.AgeGroup != AgeGroup.Adult && currentUser.AgeGroup != AgeGroup.Parent)
+                            {
+                                Console.WriteLine($"🚫 Sorry {currentUser.DisplayName}, children cannot switch to other user accounts.");
+                                Console.WriteLine("📞 Please ask a parent or guardian to help you switch users.");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"👋 Goodbye, {currentUser.DisplayName}!");
+                                currentUser = null;
+                            }
                             break;
                         case "exit":
                         case "quit":
@@ -193,22 +203,59 @@ namespace PocketFence.FamilyOS
 
         static async Task<FamilyMember?> AuthenticateUserAsync(FamilyOSKernel kernel)
         {
-            Console.WriteLine("\\n🔐 Please log in to FamilyOS");
-            Console.WriteLine("=============================");
-            
-            Console.Write("Username: ");
-            var username = Console.ReadLine()?.Trim();
-            
-            if (string.IsNullOrWhiteSpace(username))
-                return null;
+            while (true)
+            {
+                Console.WriteLine("\\n🔐 Please log in to FamilyOS");
+                Console.WriteLine("=============================");
+                
+                Console.Write("Username: ");
+                var username = Console.ReadLine()?.Trim();
+                
+                if (string.IsNullOrWhiteSpace(username))
+                    continue;
 
-            Console.Write("Password: ");
-            var password = ReadPassword();
+                Console.Write("Password: ");
+                var password = ReadPassword();
 
-            if (string.IsNullOrWhiteSpace(password))
-                return null;
+                if (string.IsNullOrWhiteSpace(password))
+                    continue;
 
-            return await kernel.AuthenticateFamilyMemberAsync(username, password);
+                var authenticatedUser = await kernel.AuthenticateFamilyMemberAsync(username, password);
+                
+                if (authenticatedUser != null)
+                {
+                    return authenticatedUser;
+                }
+                
+                // Authentication failed - provide options
+                Console.WriteLine("❌ Authentication failed. Invalid username or password.");
+                Console.WriteLine();
+                Console.WriteLine("Choose an option:");
+                Console.WriteLine("  1. 🔄 Try again");
+                Console.WriteLine("  2. 🏠 Return to main menu");
+                Console.WriteLine("  3. ❌ Exit FamilyOS");
+                Console.WriteLine();
+                
+                Console.Write("Select an option (1-3): ");
+                var choice = Console.ReadLine()?.Trim();
+                
+                switch (choice)
+                {
+                    case "1":
+                        // Continue the loop to try again
+                        continue;
+                    case "2":
+                        // Return null to go back to main menu
+                        return null;
+                    case "3":
+                        // Exit the application
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        Console.WriteLine("❓ Invalid choice. Let's try logging in again...");
+                        continue;
+                }
+            }
         }
 
         static async Task DisplayMainMenuAsync(FamilyMember user)

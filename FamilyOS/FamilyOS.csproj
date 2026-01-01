@@ -5,13 +5,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyTitle>PocketFence FamilyOS</AssemblyTitle>
-    <AssemblyDescription>Family-oriented operating system with enterprise-grade security and parental controls</AssemblyDescription>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Product>PocketFence FamilyOS</Product>
-    <Copyright>© 2025 PocketFence Family Computing</Copyright>
-    <Company>PocketFence Technologies</Company>
     <RootNamespace>PocketFence.FamilyOS</RootNamespace>
     <AssemblyName>FamilyOS</AssemblyName>
     <StartupObject>PocketFence.FamilyOS.Program</StartupObject>
@@ -31,7 +24,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageReference Include="System.Text.Json" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.1" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
   </ItemGroup>
 
