@@ -12,6 +12,9 @@ function Write-Err($msg) { Write-Host "[ERR]  $msg" }
 
 try {
     $root = (Get-Location).Path
+    Write-Host "========================================="
+    Write-Host " FamilyOS Rebuild & Perf (Windows-only)  "
+    Write-Host "========================================="
     Write-Info "Root: $root"
 
     # Clean output folders
@@ -47,6 +50,10 @@ try {
         Write-Info "Smoke test: $exe --demo-windows"
         & $exe --demo-windows | Out-Host
         Write-Ok "Smoke test completed"
+
+        Write-Info "Perf suite: $exe --perf-opt"
+        & $exe --perf-opt | Out-Host
+        Write-Ok "Perf suite completed"
     } else {
         Write-Warn "FamilyOS.exe not found at publish output"
     }
