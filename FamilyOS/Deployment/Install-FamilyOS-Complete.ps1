@@ -149,7 +149,7 @@ function Register-Windows-Integration {
     Write-Step "Registered in Windows Programs & Features" "Success"
 }
 
-function Create-Shortcuts {
+function New-Shortcuts {
     Write-Progress-Step "Creating application shortcuts..."
     
     # Create Start Menu shortcut
@@ -177,7 +177,7 @@ function Create-Shortcuts {
     }
 }
 
-function Create-Uninstaller {
+function New-Uninstaller {
     Write-Progress-Step "Creating uninstaller..."
     
     $uninstallScript = @"
@@ -297,10 +297,10 @@ try {
     Register-Windows-Integration
     
     # Create shortcuts
-    Create-Shortcuts
+    New-Shortcuts
     
     # Create uninstaller
-    Create-Uninstaller
+    New-Uninstaller
     
     # Show completion message
     Show-Completion
