@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PocketFence.FamilyOS.Core;
 using PocketFence.FamilyOS.Services;
 using PocketFence.FamilyOS.Performance;
+using FamilyOS;
 using System;
 using System.Threading.Tasks;
 
@@ -131,10 +132,7 @@ namespace PocketFence.FamilyOS.TestRunner
                 var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 var fileName = $"FamilyOS_Performance_Results_{timestamp}.json";
                 
-                var json = System.Text.Json.JsonSerializer.Serialize(results, new System.Text.Json.JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
+                var json = FamilyOSJsonHelper.Serialize(results);
 
                 await System.IO.File.WriteAllTextAsync(fileName, json);
                 

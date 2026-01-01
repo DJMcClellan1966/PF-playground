@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.IO;
 using System.Security.Cryptography;
 using System.Linq;
+using FamilyOS;
 
 namespace PocketFence.FamilyOS.Services.Optimized
 {
@@ -215,7 +216,7 @@ namespace PocketFence.FamilyOS.Services.Optimized
 
             try
             {
-                var jsonData = JsonSerializer.Serialize(stateData, new JsonSerializerOptions { WriteIndented = false });
+                var jsonData = FamilyOSJsonHelper.Serialize(stateData);
                 var encryptedData = await _systemSecurity.EncryptFamilyDataAsync(jsonData);
                 await File.WriteAllTextAsync("./FamilyData/parental_controls_state.json", encryptedData);
                 
@@ -354,7 +355,7 @@ namespace PocketFence.FamilyOS.Services.Optimized
         private readonly Dictionary<string, (object Data, DateTime Expiry)> _cache;
         private readonly string _encryptionKey;
         private readonly ConcurrentQueue<AuditLog> _auditLogQueue;
-        private readonly Timer _auditFlushTimer;
+        private readonly System.Threading.Timer _auditFlushTimer;
         private readonly string _dataPath;
         private readonly SemaphoreSlim _auditSemaphore;
 
@@ -373,7 +374,7 @@ namespace PocketFence.FamilyOS.Services.Optimized
             _auditSemaphore = new SemaphoreSlim(1, 1);
 
             // Batch audit log writes for better performance
-            _auditFlushTimer = new Timer(FlushAuditLogs, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+            _auditFlushTimer = new System.Threading.Timer(FlushAuditLogs, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
         }
 
         public async Task InitializeAsync()
@@ -557,7 +558,7 @@ namespace PocketFence.FamilyOS.Services.Optimized
                 if (logsToFlush.Count > 0)
                 {
                     var auditFile = Path.Combine(_dataPath, "audit_logs.json");
-                    var jsonData = JsonSerializer.Serialize(logsToFlush, new JsonSerializerOptions { WriteIndented = false });
+                    var jsonData = FamilyOSJsonHelper.Serialize(logsToFlush);
                     var encryptedData = await EncryptFamilyDataAsync(jsonData);
                     
                     await File.AppendAllTextAsync(auditFile, encryptedData + Environment.NewLine);

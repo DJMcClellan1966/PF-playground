@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using PocketFence.FamilyOS.Core;
 using System.Linq;
+using FamilyOS;
 
 namespace PocketFence.FamilyOS.Services
 {
@@ -44,7 +45,7 @@ namespace PocketFence.FamilyOS.Services
                 {
                     var encryptedData = await File.ReadAllTextAsync(profilesFile);
                     var decryptedData = await _systemSecurity.DecryptFamilyDataAsync(encryptedData);
-                    var profiles = JsonSerializer.Deserialize<List<FamilyMember>>(decryptedData);
+                    var profiles = FamilyOSJsonHelper.Deserialize<List<FamilyMember>>(decryptedData);
                     
                     if (profiles != null)
                     {
@@ -241,7 +242,7 @@ namespace PocketFence.FamilyOS.Services
             try
             {
                 var profilesFile = Path.Combine(_dataPath, "family_profiles.json");
-                var jsonData = JsonSerializer.Serialize(_familyMembers, new JsonSerializerOptions { WriteIndented = true });
+                var jsonData = FamilyOSJsonHelper.Serialize(_familyMembers);
                 var encryptedData = await _systemSecurity.EncryptFamilyDataAsync(jsonData);
                 
                 await File.WriteAllTextAsync(profilesFile, encryptedData);
@@ -419,16 +420,43 @@ namespace PocketFence.FamilyOS.Services
 
         private string HashPassword(string password)
         {
+            // Generate a cryptographically secure random salt
+            var salt = new byte[32];
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            rng.GetBytes(salt);
+            
             using (var sha256 = SHA256.Create())
             {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "family_salt"));
-                return Convert.ToBase64String(hashedBytes);
+                var passwordBytes = Encoding.UTF8.GetBytes(password);
+                var saltedPassword = passwordBytes.Concat(salt).ToArray();
+                var hashedBytes = sha256.ComputeHash(saltedPassword);
+                
+                // Return hash:salt format for storage
+                return Convert.ToBase64String(hashedBytes) + ":" + Convert.ToBase64String(salt);
             }
         }
 
-        private bool VerifyPassword(string password, string hash)
+        private bool VerifyPassword(string password, string storedHash)
         {
-            return HashPassword(password) == hash;
+            try
+            {
+                var parts = storedHash.Split(':');
+                if (parts.Length != 2) return false;
+                
+                var hash = Convert.FromBase64String(parts[0]);
+                var salt = Convert.FromBase64String(parts[1]);
+                
+                using var sha256 = SHA256.Create();
+                var passwordBytes = Encoding.UTF8.GetBytes(password);
+                var saltedPassword = passwordBytes.Concat(salt).ToArray();
+                var computedHash = sha256.ComputeHash(saltedPassword);
+                
+                return hash.SequenceEqual(computedHash);
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 
@@ -583,7 +611,7 @@ namespace PocketFence.FamilyOS.Services
 
             try
             {
-                var jsonData = JsonSerializer.Serialize(stateData);
+                var jsonData = FamilyOSJsonHelper.Serialize(stateData);
                 var encryptedData = await _systemSecurity.EncryptFamilyDataAsync(jsonData);
                 await File.WriteAllTextAsync("./FamilyData/parental_controls_state.json", encryptedData);
                 
@@ -667,7 +695,7 @@ namespace PocketFence.FamilyOS.Services
         public bool IsActive => _isActive;
 
         public ContentFilterService(ILogger<ContentFilterService> logger, ISystemSecurity systemSecurity, 
-            string pocketFenceApiUrl = "http://localhost:5000")
+            string pocketFenceApiUrl = "https://localhost:5001")
         {
             _logger = logger;
             _systemSecurity = systemSecurity;
@@ -713,7 +741,7 @@ namespace PocketFence.FamilyOS.Services
             {
                 // Try PocketFence API first
                 var requestBody = new { url = url };
-                var json = JsonSerializer.Serialize(requestBody);
+                var json = FamilyOSJsonHelper.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 
                 var response = await _httpClient.PostAsync($"{_pocketFenceApiUrl}/api/filter/url", content);
@@ -721,7 +749,7 @@ namespace PocketFence.FamilyOS.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadAsStringAsync();
-                    var filterResult = JsonSerializer.Deserialize<ContentFilterResult>(result);
+                    var filterResult = FamilyOSJsonHelper.Deserialize<ContentFilterResult>(result);
                     
                     if (filterResult != null)
                     {
@@ -744,7 +772,7 @@ namespace PocketFence.FamilyOS.Services
             try
             {
                 var requestBody = new { text = text };
-                var json = JsonSerializer.Serialize(requestBody);
+                var json = FamilyOSJsonHelper.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 
                 var response = await _httpClient.PostAsync($"{_pocketFenceApiUrl}/api/filter/content", content);
@@ -752,7 +780,7 @@ namespace PocketFence.FamilyOS.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadAsStringAsync();
-                    var filterResult = JsonSerializer.Deserialize<ContentFilterResult>(result);
+                    var filterResult = FamilyOSJsonHelper.Deserialize<ContentFilterResult>(result);
                     
                     if (filterResult != null)
                     {
@@ -1033,7 +1061,7 @@ namespace PocketFence.FamilyOS.Services
                 {
                     var encryptedData = await File.ReadAllTextAsync(auditFile);
                     var decryptedData = await DecryptFamilyDataAsync(encryptedData);
-                    var logs = JsonSerializer.Deserialize<List<AuditLog>>(decryptedData);
+                    var logs = FamilyOSJsonHelper.Deserialize<List<AuditLog>>(decryptedData);
                     
                     if (logs != null)
                     {
@@ -1053,7 +1081,7 @@ namespace PocketFence.FamilyOS.Services
             try
             {
                 var auditFile = Path.Combine(_dataPath, "audit_logs.json");
-                var jsonData = JsonSerializer.Serialize(_auditLogs, new JsonSerializerOptions { WriteIndented = true });
+                var jsonData = FamilyOSJsonHelper.Serialize(_auditLogs);
                 var encryptedData = await EncryptFamilyDataAsync(jsonData);
                 
                 await File.WriteAllTextAsync(auditFile, encryptedData);

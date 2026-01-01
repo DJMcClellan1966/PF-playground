@@ -372,7 +372,7 @@ namespace PocketFence.FamilyOS.Core
         public bool EnableActivityLogging { get; set; } = true;
         public bool EnableScreenTimeManagement { get; set; } = true;
         public string DataDirectory { get; set; } = "./FamilyData";
-        public string PocketFenceApiUrl { get; set; } = "http://localhost:5000";
+        public string PocketFenceApiUrl { get; set; } = "https://localhost:5001";
         public TimeSpan SessionTimeout { get; set; } = TimeSpan.FromHours(8);
         public bool RequireParentApprovalForApps { get; set; } = true;
         public bool EnableEducationalPriority { get; set; } = true;

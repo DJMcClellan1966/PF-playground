@@ -57,7 +57,7 @@ $healthSuccess = 0
 for ($i = 1; $i -le 5; $i++) {
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     try {
-        Invoke-RestMethod -Uri "$baseUrl/api/kernel/health" -TimeoutSec 10 | Out-Null
+        $null = Invoke-RestMethod -Uri "$baseUrl/api/kernel/health" -TimeoutSec 10
         $stopwatch.Stop()
         $healthTimes += $stopwatch.ElapsedMilliseconds
         $healthSuccess++

@@ -10,6 +10,7 @@ using System.Text;
 using PocketFence.FamilyOS.Core;
 using System.Buffers;
 using System.Linq;
+using FamilyOS;
 
 namespace PocketFence.FamilyOS.Services.Optimized
 {
@@ -76,7 +77,7 @@ namespace PocketFence.FamilyOS.Services.Optimized
                     var encryptedData = await reader.ReadToEndAsync();
                     var decryptedData = await _systemSecurity.DecryptFamilyDataAsync(encryptedData);
                     
-                    var profiles = JsonSerializer.Deserialize<List<FamilyMember>>(decryptedData);
+                    var profiles = FamilyOSJsonHelper.Deserialize<List<FamilyMember>>(decryptedData);
                     
                     if (profiles?.Count > 0)
                     {
@@ -233,7 +234,7 @@ namespace PocketFence.FamilyOS.Services.Optimized
                 try
                 {
                     // Serialize directly to StringBuilder for memory efficiency
-                    var jsonData = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = false });
+                    var jsonData = FamilyOSJsonHelper.Serialize(members);
                     var encryptedData = await _systemSecurity.EncryptFamilyDataAsync(jsonData);
                     
                     // Use async file operations
@@ -360,18 +361,47 @@ namespace PocketFence.FamilyOS.Services.Optimized
             // Use async hashing to avoid blocking thread pool
             return await Task.Run(() =>
             {
+                // Generate a cryptographically secure random salt
+                var salt = new byte[32];
+                using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+                rng.GetBytes(salt);
+                
                 using (var sha256 = SHA256.Create())
                 {
-                    var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "family_salt"));
-                    return Convert.ToBase64String(hashedBytes);
+                    var passwordBytes = Encoding.UTF8.GetBytes(password);
+                    var saltedPassword = passwordBytes.Concat(salt).ToArray();
+                    var hashedBytes = sha256.ComputeHash(saltedPassword);
+                    
+                    // Return hash:salt format for storage
+                    return Convert.ToBase64String(hashedBytes) + ":" + Convert.ToBase64String(salt);
                 }
             });
         }
 
-        private async Task<bool> VerifyPasswordAsync(string password, string hash)
+        private async Task<bool> VerifyPasswordAsync(string password, string storedHash)
         {
-            var computedHash = await HashPasswordAsync(password);
-            return computedHash == hash;
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    var parts = storedHash.Split(':');
+                    if (parts.Length != 2) return false;
+                    
+                    var hash = Convert.FromBase64String(parts[0]);
+                    var salt = Convert.FromBase64String(parts[1]);
+                    
+                    using var sha256 = SHA256.Create();
+                    var passwordBytes = Encoding.UTF8.GetBytes(password);
+                    var saltedPassword = passwordBytes.Concat(salt).ToArray();
+                    var computedHash = sha256.ComputeHash(saltedPassword);
+                    
+                    return hash.SequenceEqual(computedHash);
+                }
+                catch
+                {
+                    return false;
+                }
+            });
         }
 
         private string ComputeQuickHash(string input)
@@ -610,7 +640,7 @@ namespace PocketFence.FamilyOS.Services.Optimized
         public OptimizedContentFilterService(
             ILogger<OptimizedContentFilterService> logger, 
             ISystemSecurity systemSecurity,
-            string pocketFenceApiUrl = "http://localhost:5000")
+            string pocketFenceApiUrl = "https://localhost:5001")
         {
             _logger = logger;
             _systemSecurity = systemSecurity;

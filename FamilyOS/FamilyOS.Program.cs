@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PocketFence.FamilyOS.Core;
 using PocketFence.FamilyOS.Services;
 using PocketFence.FamilyOS.Apps;
+using PocketFence.FamilyOS.UI;
 using System;
 using System.Threading.Tasks;
 
@@ -17,8 +18,8 @@ namespace PocketFence.FamilyOS
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("🏠 PocketFence FamilyOS - Starting...");
-            Console.WriteLine("=====================================");
+            // Enhanced startup with modern UI
+            await FamilyOSUI.ShowWelcomeHeaderAsync();
 
             try
             {
@@ -36,22 +37,22 @@ namespace PocketFence.FamilyOS
                     return;
                 }
 
-                // Display welcome message
-                await DisplayWelcomeAsync();
+                // Enhanced welcome display already shown
+                await FamilyOSUI.ShowLoadingAsync("🚀 Initializing family environment...", 1500);
 
                 // Main family interaction loop
                 await RunFamilyInteractionLoopAsync(kernel, familyManager);
 
-                // Graceful shutdown
-                Console.WriteLine("\n🔄 FamilyOS shutting down...");
+                // Graceful shutdown with enhanced UI
+                await FamilyOSUI.ShowLoadingAsync("🔄 FamilyOS shutting down...", 1000);
                 await kernel.ShutdownAsync();
                 
-                Console.WriteLine("👋 Goodbye! Have a wonderful day!");
+                await FamilyOSUI.ShowSuccessAsync("Goodbye! Have a wonderful day!");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Critical error: {ex.Message}");
-                Console.WriteLine("Please contact your system administrator.");
+                FamilyOSUI.ShowError($"Critical error: {ex.Message}");
+                FamilyOSUI.ShowInfo("Please contact your system administrator.");
             }
         }
 
@@ -67,7 +68,7 @@ namespace PocketFence.FamilyOS
                         EnableParentalControls = true,
                         EnableActivityLogging = true,
                         EnableScreenTimeManagement = true,
-                        PocketFenceApiUrl = "http://localhost:5000",
+                        PocketFenceApiUrl = "https://localhost:5001",
                         DataDirectory = "./FamilyData"
                     };
 
@@ -90,21 +91,6 @@ namespace PocketFence.FamilyOS
                     });
                 });
 
-        static async Task DisplayWelcomeAsync()
-        {
-            Console.WriteLine("\n🌟 Welcome to PocketFence FamilyOS! 🌟");
-            Console.WriteLine("====================================");
-            Console.WriteLine("🛡️  Safe computing environment for the whole family");
-            Console.WriteLine("📚 Educational content prioritized");
-            Console.WriteLine("⏰ Screen time management built-in");
-            Console.WriteLine("🔒 Enterprise-grade security protection");
-            Console.WriteLine();
-            Console.WriteLine("👨‍👩‍👧‍👦 Available family members:");
-            Console.WriteLine("  • Parents: mom/parent123, dad/parent123");
-            Console.WriteLine("  • Children: sarah/kid123, alex/teen123");
-            Console.WriteLine();
-        }
-
         static async Task RunFamilyInteractionLoopAsync(FamilyOSKernel kernel, IFamilyManager familyManager)
         {
             FamilyMember? currentUser = null;
@@ -125,11 +111,10 @@ namespace PocketFence.FamilyOS
                         }
                     }
 
-                    // Main menu
-                    await DisplayMainMenuAsync(currentUser);
+                    // Enhanced main menu with modern styling
+                    FamilyOSUI.ShowMainMenu(currentUser.DisplayName, currentUser.AgeGroup.ToString(), currentUser.Role.ToString(), currentUser.LastLoginTime);
                     
-                    Console.Write("Select an option: ");
-                    var choice = Console.ReadLine()?.Trim();
+                    var choice = FamilyOSUI.GetInput("\n🎯 Select an option");
 
                     switch (choice?.ToLowerInvariant())
                     {
@@ -167,12 +152,12 @@ namespace PocketFence.FamilyOS
                                 // Check if non-adult user is trying to switch to potentially adult account
                                 if (currentUser.AgeGroup != AgeGroup.Adult && currentUser.AgeGroup != AgeGroup.Parent)
                                 {
-                                    Console.WriteLine($"🚫 Sorry {currentUser.DisplayName}, children cannot switch to other user accounts.");
-                                    Console.WriteLine("📞 Please ask a parent or guardian to help you switch users.");
+                                    FamilyOSUI.ShowWarning($"Sorry {currentUser.DisplayName}, children cannot switch to other user accounts.");
+                                    FamilyOSUI.ShowInfo("📞 Please ask a parent or guardian to help you switch users.");
                                 }
                                 else
                                 {
-                                    Console.WriteLine($"👋 Goodbye, {currentUser.DisplayName}!");
+                                    await FamilyOSUI.ShowSuccessAsync($"Goodbye, {currentUser.DisplayName}!");
                                     currentUser = null;
                                 }
                             }
@@ -184,7 +169,7 @@ namespace PocketFence.FamilyOS
                             }
                             else
                             {
-                                Console.WriteLine("❌ Parent privileges required for password management.");
+                                FamilyOSUI.ShowError("Parent privileges required for password management.");
                             }
                             break;
                         case "11":
@@ -213,21 +198,19 @@ namespace PocketFence.FamilyOS
                         case "0":
                             return;
                         default:
-                            Console.WriteLine("❓ Invalid option. Please try again.");
+                            FamilyOSUI.ShowError("Invalid option. Please try again.");
                             break;
                     }
 
                     if (choice != "9" && choice != "11" && choice != "exit" && choice != "quit" && choice != "0")
                     {
-                        Console.WriteLine("\\nPress any key to continue...");
-                        Console.ReadKey();
+                        FamilyOSUI.WaitForInput();
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Error: {ex.Message}");
-                    Console.WriteLine("Press any key to continue...");
-                    Console.ReadKey();
+                    FamilyOSUI.ShowError($"Error: {ex.Message}");
+                    FamilyOSUI.WaitForInput();
                 }
             }
         }
@@ -236,17 +219,14 @@ namespace PocketFence.FamilyOS
         {
             while (true)
             {
-                Console.WriteLine("\\n🔐 Please log in to FamilyOS");
-                Console.WriteLine("=============================");
+                FamilyOSUI.ShowLoginInterface();
                 
-                Console.Write("Username: ");
-                var username = Console.ReadLine()?.Trim();
+                var username = FamilyOSUI.GetInput("Username");
                 
                 if (string.IsNullOrWhiteSpace(username))
                     continue;
 
-                Console.Write("Password: ");
-                var password = ReadPassword();
+                var password = FamilyOSUI.GetInput("Password", true);
 
                 if (string.IsNullOrWhiteSpace(password))
                     continue;
@@ -262,25 +242,24 @@ namespace PocketFence.FamilyOS
                 var familyManager = kernel.GetService<IFamilyManager>();
                 var isLocked = await familyManager.IsAccountLockedAsync(username);
                 
-                // Authentication failed - provide options
+                // Authentication failed - provide options with enhanced UI
                 if (isLocked)
                 {
-                    Console.WriteLine("🔒 Account is temporarily locked due to multiple failed login attempts.");
-                    Console.WriteLine("📞 Please ask a parent to unlock your account or wait 15 minutes.");
+                    FamilyOSUI.ShowWarning("🔒 Account is temporarily locked due to multiple failed login attempts.");
+                    FamilyOSUI.ShowInfo("📞 Please ask a parent to unlock your account or wait 15 minutes.");
                 }
                 else
                 {
-                    Console.WriteLine("❌ Authentication failed. Invalid username or password.");
+                    FamilyOSUI.ShowError("Authentication failed. Invalid username or password.");
                 }
                 Console.WriteLine();
-                Console.WriteLine("Choose an option:");
+                FamilyOSUI.ShowInfo("Choose an option:");
                 Console.WriteLine("  1. 🔄 Try again");
                 Console.WriteLine("  2. 🏠 Return to main menu");
                 Console.WriteLine("  3. ❌ Exit FamilyOS");
                 Console.WriteLine();
                 
-                Console.Write("Select an option (1-3): ");
-                var choice = Console.ReadLine()?.Trim();
+                var choice = FamilyOSUI.GetInput("Select an option (1-3)");
                 
                 switch (choice)
                 {
@@ -295,7 +274,7 @@ namespace PocketFence.FamilyOS
                         Environment.Exit(0);
                         break;
                     default:
-                        Console.WriteLine("❓ Invalid choice. Let's try logging in again...");
+                        FamilyOSUI.ShowWarning("Invalid choice. Let's try logging in again...");
                         continue;
                 }
             }
@@ -361,75 +340,87 @@ namespace PocketFence.FamilyOS
         {
             var status = kernel.GetSystemStatus();
             
-            Console.WriteLine("\\n📊 FamilyOS System Status");
-            Console.WriteLine("==========================");
+            Console.Clear();
+            FamilyOSUI.ShowInfo("Loading system status...");
+            await FamilyOSUI.ShowProgressAsync("🔍 Gathering system information", 8);
+            
+            Console.Clear();
+            Console.WriteLine("📊 FamilyOS System Status");
+            Console.WriteLine("═══════════════════════════════");
+            Console.WriteLine();
+            
+            // Status with color coding
+            Console.ForegroundColor = status.IsRunning ? ConsoleColor.Green : ConsoleColor.Red;
             Console.WriteLine($"🟢 System Running: {status.IsRunning}");
+            Console.ResetColor();
+            
+            Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine($"👨‍👩‍👧‍👦 Family Members: {status.FamilyMemberCount}");
             Console.WriteLine($"📱 Active Apps: {status.ActiveApps}");
+            Console.ResetColor();
+            
+            Console.ForegroundColor = status.ContentFilterActive ? ConsoleColor.Green : ConsoleColor.Yellow;
             Console.WriteLine($"🔍 Content Filter: {(status.ContentFilterActive ? "Active" : "Inactive")}");
+            Console.ResetColor();
+            
+            Console.ForegroundColor = status.ParentalControlsActive ? ConsoleColor.Green : ConsoleColor.Yellow;
             Console.WriteLine($"🛡️ Parental Controls: {(status.ParentalControlsActive ? "Active" : "Inactive")}");
+            Console.ResetColor();
+            
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine($"⏱️ System Uptime: {status.SystemUptime.Hours}h {status.SystemUptime.Minutes}m");
             Console.WriteLine($"🕒 Last Updated: {status.LastUpdated:HH:mm:ss}");
+            Console.ResetColor();
+            
+            Console.WriteLine();
+            FamilyOSUI.WaitForInput();
             
             await Task.CompletedTask;
         }
 
         static async Task DisplayFamilyMembersAsync(IFamilyManager familyManager)
         {
+            await FamilyOSUI.ShowLoadingAsync("📊 Loading family information...", 1000);
+            
             var members = await familyManager.GetFamilyMembersAsync();
-            
-            Console.WriteLine("\\n👨‍👩‍👧‍👦 Family Members");
-            Console.WriteLine("==================");
-            
-            foreach (var member in members)
-            {
-                var statusIcon = member.IsOnline ? "🟢" : "⚫";
-                Console.WriteLine($"{statusIcon} {member.DisplayName}");
-                Console.WriteLine($"   👤 Username: {member.Username}");
-                Console.WriteLine($"   🎂 Age Group: {member.AgeGroup}");
-                Console.WriteLine($"   👮 Role: {member.Role}");
-                Console.WriteLine($"   🛡️ Filter Level: {member.FilterLevel}");
-                Console.WriteLine($"   ⏰ Daily Screen Time Limit: {member.ScreenTime.DailyLimit.TotalMinutes} min");
-                Console.WriteLine($"   🕒 Last Login: {member.LastLoginTime:yyyy-MM-dd HH:mm}");
-                Console.WriteLine();
-            }
+            FamilyOSUI.ShowFamilyMembers(members);
+            FamilyOSUI.WaitForInput();
         }
 
         static async Task ChangePasswordAsync(IFamilyManager familyManager, FamilyMember currentUser)
         {
-            Console.WriteLine("\\n🔐 Change Password");
-            Console.WriteLine("===================");
+            Console.Clear();
+            Console.WriteLine("🔐 Change Password");
+            Console.WriteLine("═══════════════════");
+            Console.WriteLine();
             
-            Console.Write("Current Password: ");
-            var currentPassword = ReadPassword();
-            
-            Console.Write("New Password: ");
-            var newPassword = ReadPassword();
-            
-            Console.Write("Confirm New Password: ");
-            var confirmPassword = ReadPassword();
+            var currentPassword = FamilyOSUI.GetInput("Current Password", true);
+            var newPassword = FamilyOSUI.GetInput("New Password", true);
+            var confirmPassword = FamilyOSUI.GetInput("Confirm New Password", true);
             
             if (newPassword != confirmPassword)
             {
-                Console.WriteLine("❌ New passwords do not match. Please try again.");
+                FamilyOSUI.ShowError("New passwords do not match. Please try again.");
                 return;
             }
             
             if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 4)
             {
-                Console.WriteLine("❌ Password must be at least 4 characters long.");
+                FamilyOSUI.ShowError("Password must be at least 4 characters long.");
                 return;
             }
+            
+            await FamilyOSUI.ShowLoadingAsync("🔄 Updating password...", 1500);
             
             var success = await familyManager.ChangePasswordAsync(currentUser.Username, currentPassword, newPassword, currentUser);
             
             if (success)
             {
-                Console.WriteLine("✅ Password changed successfully!");
+                await FamilyOSUI.ShowSuccessAsync("Password changed successfully!");
             }
             else
             {
-                Console.WriteLine("❌ Failed to change password. Please check your current password.");
+                FamilyOSUI.ShowError("Failed to change password. Please check your current password.");
             }
         }
 
@@ -439,7 +430,7 @@ namespace PocketFence.FamilyOS
             {
                 Console.Clear();
                 Console.WriteLine("🔧 Password Management (Parent Only)");
-                Console.WriteLine("====================================");
+                Console.WriteLine("════════════════════════════════════");
                 Console.WriteLine("  1. 🔄 Reset Child's Password");
                 Console.WriteLine("  2. 🔓 Unlock Account");
                 Console.WriteLine("  3. 📋 View Password Change History");
@@ -447,8 +438,7 @@ namespace PocketFence.FamilyOS
                 Console.WriteLine("  0. ⬅️ Back to Main Menu");
                 Console.WriteLine();
                 
-                Console.Write("Select an option: ");
-                var choice = Console.ReadLine()?.Trim();
+                var choice = FamilyOSUI.GetInput("Select an option");
                 
                 switch (choice)
                 {
@@ -467,14 +457,13 @@ namespace PocketFence.FamilyOS
                     case "0":
                         return;
                     default:
-                        Console.WriteLine("❓ Invalid option. Please try again.");
+                        FamilyOSUI.ShowError("Invalid option. Please try again.");
                         break;
                 }
                 
                 if (choice != "0")
                 {
-                    Console.WriteLine("\\nPress any key to continue...");
-                    Console.ReadKey();
+                    FamilyOSUI.WaitForInput();
                 }
             }
         }

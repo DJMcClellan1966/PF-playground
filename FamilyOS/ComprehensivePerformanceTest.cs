@@ -32,7 +32,15 @@ namespace FamilyOSPerformanceTest
                 // Simulate password hashing (what FamilyOS does)
                 using (var sha256 = System.Security.Cryptography.SHA256.Create())
                 {
-                    var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password + "family_salt"));
+                    // Secure password hashing with random salt
+            var salt = new byte[32];
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            rng.GetBytes(salt);
+            
+            using var hasher = System.Security.Cryptography.SHA256.Create();
+            var passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
+            var saltedPassword = passwordBytes.Concat(salt).ToArray();
+            var hashedBytes = hasher.ComputeHash(saltedPassword);
                     var hash = Convert.ToBase64String(hashedBytes);
                     
                     // Simulate hash comparison
