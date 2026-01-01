@@ -154,19 +154,54 @@ namespace PocketFence.FamilyOS.Services
         {
             var member = _familyMembers.FirstOrDefault(m => m.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
             
-            if (member != null && VerifyPassword(password, member.PasswordHash))
+            if (member == null)
             {
+                _logger.LogWarning($"Failed authentication attempt for unknown username: {username}");
+                return null;
+            }
+
+            // Check if account is locked
+            if (await IsAccountLockedAsync(username))
+            {
+                var lockTimeRemaining = member.AccountLockedUntil?.Subtract(DateTime.UtcNow);
+                _logger.LogWarning($"Authentication failed: Account {username} is locked for {lockTimeRemaining?.Minutes} more minutes");
+                return null;
+            }
+            
+            if (VerifyPassword(password, member.PasswordHash))
+            {
+                // Successful login - reset failed attempts
                 member.LastLoginTime = DateTime.UtcNow;
                 member.IsOnline = true;
+                member.FailedLoginAttempts = 0;
                 
+                await SaveFamilyDataAsync();
                 await _systemSecurity.LogFamilyActivityAsync($"User logged in: {username}", member);
                 _logger.LogInformation($"Successful authentication for {member.DisplayName}");
                 
                 return member;
             }
-
-            _logger.LogWarning($"Failed authentication attempt for username: {username}");
-            return null;
+            else
+            {
+                // Failed login - increment attempts and potentially lock account
+                member.FailedLoginAttempts++;
+                
+                if (member.FailedLoginAttempts >= 3)
+                {
+                    // Lock account for 15 minutes
+                    member.AccountLockedUntil = DateTime.UtcNow.AddMinutes(15);
+                    await SaveFamilyDataAsync();
+                    await _systemSecurity.LogFamilyActivityAsync($"Account locked due to failed login attempts: {username}", member);
+                    _logger.LogWarning($"Account locked for {username} due to {member.FailedLoginAttempts} failed attempts");
+                }
+                else
+                {
+                    await SaveFamilyDataAsync();
+                    _logger.LogWarning($"Failed authentication attempt {member.FailedLoginAttempts}/3 for username: {username}");
+                }
+                
+                return null;
+            }
         }
 
         public async Task<List<FamilyMember>> GetFamilyMembersAsync()
@@ -221,6 +256,165 @@ namespace PocketFence.FamilyOS.Services
         public int GetFamilyMemberCount()
         {
             return _familyMembers.Count;
+        }
+
+        public async Task<bool> ChangePasswordAsync(string username, string currentPassword, string newPassword, FamilyMember requestingUser)
+        {
+            try
+            {
+                var member = _familyMembers.FirstOrDefault(m => m.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+                if (member == null)
+                {
+                    _logger.LogWarning($"Password change failed: User {username} not found");
+                    return false;
+                }
+
+                // Check permissions: user changing own password OR parent changing child's password
+                if (member.Id != requestingUser.Id && requestingUser.Role != FamilyRole.Parent)
+                {
+                    _logger.LogWarning($"Permission denied: {requestingUser.Username} attempted to change password for {username}");
+                    return false;
+                }
+
+                // If user is changing own password, verify current password
+                if (member.Id == requestingUser.Id && !VerifyPassword(currentPassword, member.PasswordHash))
+                {
+                    _logger.LogWarning($"Password change failed: Invalid current password for {username}");
+                    return false;
+                }
+
+                // Update password
+                member.PasswordHash = HashPassword(newPassword);
+                member.LastPasswordChange = DateTime.UtcNow;
+                member.PasswordChangeHistory.Add(DateTime.UtcNow);
+                
+                // Keep only last 10 password change dates
+                if (member.PasswordChangeHistory.Count > 10)
+                {
+                    member.PasswordChangeHistory = member.PasswordChangeHistory.Skip(member.PasswordChangeHistory.Count - 10).ToList();
+                }
+
+                await SaveFamilyDataAsync();
+                await _systemSecurity.LogFamilyActivityAsync($"Password changed for {username} by {requestingUser.Username}", requestingUser);
+                
+                _logger.LogInformation($"Password successfully changed for {username} by {requestingUser.Username}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error changing password for {username}");
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string targetUsername, string newPassword, FamilyMember parentUser)
+        {
+            try
+            {
+                // Only parents can reset passwords
+                if (parentUser.Role != FamilyRole.Parent)
+                {
+                    _logger.LogWarning($"Permission denied: {parentUser.Username} attempted to reset password for {targetUsername}");
+                    return false;
+                }
+
+                var member = _familyMembers.FirstOrDefault(m => m.Username.Equals(targetUsername, StringComparison.OrdinalIgnoreCase));
+                if (member == null)
+                {
+                    _logger.LogWarning($"Password reset failed: User {targetUsername} not found");
+                    return false;
+                }
+
+                // Reset password and unlock account
+                member.PasswordHash = HashPassword(newPassword);
+                member.LastPasswordChange = DateTime.UtcNow;
+                member.PasswordChangeHistory.Add(DateTime.UtcNow);
+                member.FailedLoginAttempts = 0;
+                member.AccountLockedUntil = null;
+
+                await SaveFamilyDataAsync();
+                await _systemSecurity.LogFamilyActivityAsync($"Password reset for {targetUsername} by parent {parentUser.Username}", parentUser);
+                
+                _logger.LogInformation($"Password successfully reset for {targetUsername} by parent {parentUser.Username}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error resetting password for {targetUsername}");
+                return false;
+            }
+        }
+
+        public async Task<bool> IsAccountLockedAsync(string username)
+        {
+            var member = _familyMembers.FirstOrDefault(m => m.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            if (member?.AccountLockedUntil == null)
+                return false;
+
+            if (DateTime.UtcNow >= member.AccountLockedUntil)
+            {
+                // Auto-unlock expired lockouts
+                member.AccountLockedUntil = null;
+                member.FailedLoginAttempts = 0;
+                await SaveFamilyDataAsync();
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task UnlockAccountAsync(string username, FamilyMember parentUser)
+        {
+            try
+            {
+                if (parentUser.Role != FamilyRole.Parent)
+                {
+                    _logger.LogWarning($"Permission denied: {parentUser.Username} attempted to unlock account for {username}");
+                    return;
+                }
+
+                var member = _familyMembers.FirstOrDefault(m => m.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+                if (member != null)
+                {
+                    member.AccountLockedUntil = null;
+                    member.FailedLoginAttempts = 0;
+                    
+                    await SaveFamilyDataAsync();
+                    await _systemSecurity.LogFamilyActivityAsync($"Account unlocked for {username} by parent {parentUser.Username}", parentUser);
+                    
+                    _logger.LogInformation($"Account successfully unlocked for {username} by parent {parentUser.Username}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error unlocking account for {username}");
+            }
+        }
+
+        public async Task<List<string>> GetPasswordChangeHistoryAsync(string username, FamilyMember requestingUser)
+        {
+            try
+            {
+                var member = _familyMembers.FirstOrDefault(m => m.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+                if (member == null)
+                    return new List<string>();
+
+                // Check permissions: own history OR parent viewing child's history
+                if (member.Id != requestingUser.Id && requestingUser.Role != FamilyRole.Parent)
+                {
+                    _logger.LogWarning($"Permission denied: {requestingUser.Username} attempted to view password history for {username}");
+                    return new List<string>();
+                }
+
+                return member.PasswordChangeHistory
+                    .Select(date => date.ToString("yyyy-MM-dd HH:mm:ss"))
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving password change history for {username}");
+                return new List<string>();
+            }
         }
 
         private string HashPassword(string password)

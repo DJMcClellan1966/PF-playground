@@ -155,26 +155,57 @@ namespace PocketFence.FamilyOS
                             await DisplaySystemStatusAsync(kernel);
                             break;
                         case "8":
+                            await ChangePasswordAsync(familyManager, currentUser);
+                            break;
+                        case "9":
                             if (currentUser.Role == FamilyRole.Parent)
                             {
                                 await DisplayFamilyMembersAsync(familyManager);
                             }
                             else
                             {
-                                Console.WriteLine("❌ Parent privileges required for family management.");
+                                // Check if non-adult user is trying to switch to potentially adult account
+                                if (currentUser.AgeGroup != AgeGroup.Adult && currentUser.AgeGroup != AgeGroup.Parent)
+                                {
+                                    Console.WriteLine($"🚫 Sorry {currentUser.DisplayName}, children cannot switch to other user accounts.");
+                                    Console.WriteLine("📞 Please ask a parent or guardian to help you switch users.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"👋 Goodbye, {currentUser.DisplayName}!");
+                                    currentUser = null;
+                                }
                             }
                             break;
-                        case "9":
-                            // Check if non-adult user is trying to switch to potentially adult account
-                            if (currentUser.AgeGroup != AgeGroup.Adult && currentUser.AgeGroup != AgeGroup.Parent)
+                        case "10":
+                            if (currentUser.Role == FamilyRole.Parent)
                             {
-                                Console.WriteLine($"🚫 Sorry {currentUser.DisplayName}, children cannot switch to other user accounts.");
-                                Console.WriteLine("📞 Please ask a parent or guardian to help you switch users.");
+                                await PasswordManagementMenuAsync(familyManager, currentUser);
                             }
                             else
                             {
-                                Console.WriteLine($"👋 Goodbye, {currentUser.DisplayName}!");
-                                currentUser = null;
+                                Console.WriteLine("❌ Parent privileges required for password management.");
+                            }
+                            break;
+                        case "11":
+                            if (currentUser.Role == FamilyRole.Parent)
+                            {
+                                // Check if non-adult user is trying to switch to potentially adult account
+                                if (currentUser.AgeGroup != AgeGroup.Adult && currentUser.AgeGroup != AgeGroup.Parent)
+                                {
+                                    Console.WriteLine($"🚫 Sorry {currentUser.DisplayName}, children cannot switch to other user accounts.");
+                                    Console.WriteLine("📞 Please ask a parent or guardian to help you switch users.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"👋 Goodbye, {currentUser.DisplayName}!");
+                                    currentUser = null;
+                                }
+                            }
+                            else
+                            {
+                                // For non-parent users, case "9" handles user switching
+                                goto case "9";
                             }
                             break;
                         case "exit":
@@ -186,7 +217,7 @@ namespace PocketFence.FamilyOS
                             break;
                     }
 
-                    if (choice != "9" && choice != "exit" && choice != "quit" && choice != "0")
+                    if (choice != "9" && choice != "11" && choice != "exit" && choice != "quit" && choice != "0")
                     {
                         Console.WriteLine("\\nPress any key to continue...");
                         Console.ReadKey();
@@ -227,8 +258,20 @@ namespace PocketFence.FamilyOS
                     return authenticatedUser;
                 }
                 
+                // Check if account is locked to provide specific message
+                var familyManager = kernel.GetService<IFamilyManager>();
+                var isLocked = await familyManager.IsAccountLockedAsync(username);
+                
                 // Authentication failed - provide options
-                Console.WriteLine("❌ Authentication failed. Invalid username or password.");
+                if (isLocked)
+                {
+                    Console.WriteLine("🔒 Account is temporarily locked due to multiple failed login attempts.");
+                    Console.WriteLine("📞 Please ask a parent to unlock your account or wait 15 minutes.");
+                }
+                else
+                {
+                    Console.WriteLine("❌ Authentication failed. Invalid username or password.");
+                }
                 Console.WriteLine();
                 Console.WriteLine("Choose an option:");
                 Console.WriteLine("  1. 🔄 Try again");
@@ -275,13 +318,15 @@ namespace PocketFence.FamilyOS
             Console.WriteLine();
             Console.WriteLine("🛠️  System Options:");
             Console.WriteLine("  7. 📊 System Status");
+            Console.WriteLine("  8. 🔐 Change Password");
             
             if (user.Role == FamilyRole.Parent)
             {
-                Console.WriteLine("  8. 👨‍👩‍👧‍👦 Family Management (Parent Only)");
+                Console.WriteLine("  9. 👨‍👩‍👧‍👦 Family Management (Parent Only)");
+                Console.WriteLine("  10. 🔧 Password Management (Parent Only)");
             }
             
-            Console.WriteLine("  9. 🚪 Switch User");
+            Console.WriteLine($"  {(user.Role == FamilyRole.Parent ? "11" : "9")}. 🚪 Switch User");
             Console.WriteLine("  0. ❌ Exit FamilyOS");
             Console.WriteLine();
         }
@@ -346,6 +391,251 @@ namespace PocketFence.FamilyOS
                 Console.WriteLine($"   🛡️ Filter Level: {member.FilterLevel}");
                 Console.WriteLine($"   ⏰ Daily Screen Time Limit: {member.ScreenTime.DailyLimit.TotalMinutes} min");
                 Console.WriteLine($"   🕒 Last Login: {member.LastLoginTime:yyyy-MM-dd HH:mm}");
+                Console.WriteLine();
+            }
+        }
+
+        static async Task ChangePasswordAsync(IFamilyManager familyManager, FamilyMember currentUser)
+        {
+            Console.WriteLine("\\n🔐 Change Password");
+            Console.WriteLine("===================");
+            
+            Console.Write("Current Password: ");
+            var currentPassword = ReadPassword();
+            
+            Console.Write("New Password: ");
+            var newPassword = ReadPassword();
+            
+            Console.Write("Confirm New Password: ");
+            var confirmPassword = ReadPassword();
+            
+            if (newPassword != confirmPassword)
+            {
+                Console.WriteLine("❌ New passwords do not match. Please try again.");
+                return;
+            }
+            
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 4)
+            {
+                Console.WriteLine("❌ Password must be at least 4 characters long.");
+                return;
+            }
+            
+            var success = await familyManager.ChangePasswordAsync(currentUser.Username, currentPassword, newPassword, currentUser);
+            
+            if (success)
+            {
+                Console.WriteLine("✅ Password changed successfully!");
+            }
+            else
+            {
+                Console.WriteLine("❌ Failed to change password. Please check your current password.");
+            }
+        }
+
+        static async Task PasswordManagementMenuAsync(IFamilyManager familyManager, FamilyMember parentUser)
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("🔧 Password Management (Parent Only)");
+                Console.WriteLine("====================================");
+                Console.WriteLine("  1. 🔄 Reset Child's Password");
+                Console.WriteLine("  2. 🔓 Unlock Account");
+                Console.WriteLine("  3. 📋 View Password Change History");
+                Console.WriteLine("  4. 🔍 Check Account Status");
+                Console.WriteLine("  0. ⬅️ Back to Main Menu");
+                Console.WriteLine();
+                
+                Console.Write("Select an option: ");
+                var choice = Console.ReadLine()?.Trim();
+                
+                switch (choice)
+                {
+                    case "1":
+                        await ResetChildPasswordAsync(familyManager, parentUser);
+                        break;
+                    case "2":
+                        await UnlockAccountAsync(familyManager, parentUser);
+                        break;
+                    case "3":
+                        await ViewPasswordHistoryAsync(familyManager, parentUser);
+                        break;
+                    case "4":
+                        await CheckAccountStatusAsync(familyManager);
+                        break;
+                    case "0":
+                        return;
+                    default:
+                        Console.WriteLine("❓ Invalid option. Please try again.");
+                        break;
+                }
+                
+                if (choice != "0")
+                {
+                    Console.WriteLine("\\nPress any key to continue...");
+                    Console.ReadKey();
+                }
+            }
+        }
+
+        static async Task ResetChildPasswordAsync(IFamilyManager familyManager, FamilyMember parentUser)
+        {
+            Console.WriteLine("\\n🔄 Reset Child's Password");
+            Console.WriteLine("===========================");
+            
+            var members = await familyManager.GetFamilyMembersAsync();
+            var children = members.Where(m => m.Role != FamilyRole.Parent).ToList();
+            
+            if (!children.Any())
+            {
+                Console.WriteLine("ℹ️ No child accounts found.");
+                return;
+            }
+            
+            Console.WriteLine("Select child account:");
+            for (int i = 0; i < children.Count; i++)
+            {
+                Console.WriteLine($"  {i + 1}. {children[i].DisplayName} ({children[i].Username})");
+            }
+            
+            Console.Write("Enter number: ");
+            if (int.TryParse(Console.ReadLine(), out int selection) && selection > 0 && selection <= children.Count)
+            {
+                var child = children[selection - 1];
+                
+                Console.Write($"New password for {child.DisplayName}: ");
+                var newPassword = ReadPassword();
+                
+                if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 4)
+                {
+                    Console.WriteLine("❌ Password must be at least 4 characters long.");
+                    return;
+                }
+                
+                var success = await familyManager.ResetPasswordAsync(child.Username, newPassword, parentUser);
+                
+                if (success)
+                {
+                    Console.WriteLine($"✅ Password reset successfully for {child.DisplayName}!");
+                    if (await familyManager.IsAccountLockedAsync(child.Username))
+                    {
+                        Console.WriteLine("🔓 Account has also been unlocked.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("❌ Failed to reset password.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("❌ Invalid selection.");
+            }
+        }
+
+        static async Task UnlockAccountAsync(IFamilyManager familyManager, FamilyMember parentUser)
+        {
+            Console.WriteLine("\\n🔓 Unlock Account");
+            Console.WriteLine("==================");
+            
+            var members = await familyManager.GetFamilyMembersAsync();
+            var lockedMembers = new List<FamilyMember>();
+            
+            foreach (var member in members)
+            {
+                if (await familyManager.IsAccountLockedAsync(member.Username))
+                {
+                    lockedMembers.Add(member);
+                }
+            }
+            
+            if (!lockedMembers.Any())
+            {
+                Console.WriteLine("ℹ️ No accounts are currently locked.");
+                return;
+            }
+            
+            Console.WriteLine("Locked accounts:");
+            for (int i = 0; i < lockedMembers.Count; i++)
+            {
+                Console.WriteLine($"  {i + 1}. {lockedMembers[i].DisplayName} ({lockedMembers[i].Username})");
+            }
+            
+            Console.Write("Select account to unlock: ");
+            if (int.TryParse(Console.ReadLine(), out int selection) && selection > 0 && selection <= lockedMembers.Count)
+            {
+                var member = lockedMembers[selection - 1];
+                await familyManager.UnlockAccountAsync(member.Username, parentUser);
+                Console.WriteLine($"✅ Account unlocked for {member.DisplayName}!");
+            }
+            else
+            {
+                Console.WriteLine("❌ Invalid selection.");
+            }
+        }
+
+        static async Task ViewPasswordHistoryAsync(IFamilyManager familyManager, FamilyMember parentUser)
+        {
+            Console.WriteLine("\\n📋 Password Change History");
+            Console.WriteLine("============================");
+            
+            var members = await familyManager.GetFamilyMembersAsync();
+            
+            Console.WriteLine("Select family member:");
+            for (int i = 0; i < members.Count; i++)
+            {
+                Console.WriteLine($"  {i + 1}. {members[i].DisplayName} ({members[i].Username})");
+            }
+            
+            Console.Write("Enter number: ");
+            if (int.TryParse(Console.ReadLine(), out int selection) && selection > 0 && selection <= members.Count)
+            {
+                var member = members[selection - 1];
+                var history = await familyManager.GetPasswordChangeHistoryAsync(member.Username, parentUser);
+                
+                Console.WriteLine($"\\nPassword change history for {member.DisplayName}:");
+                if (history.Any())
+                {
+                    foreach (var change in history)
+                    {
+                        Console.WriteLine($"  🕒 {change}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("  ℹ️ No password changes recorded.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("❌ Invalid selection.");
+            }
+        }
+
+        static async Task CheckAccountStatusAsync(IFamilyManager familyManager)
+        {
+            Console.WriteLine("\\n🔍 Account Status Summary");
+            Console.WriteLine("===========================");
+            
+            var members = await familyManager.GetFamilyMembersAsync();
+            
+            foreach (var member in members)
+            {
+                var isLocked = await familyManager.IsAccountLockedAsync(member.Username);
+                var lockIcon = isLocked ? "🔒" : "🔓";
+                var onlineIcon = member.IsOnline ? "🟢" : "⚫";
+                
+                Console.WriteLine($"{lockIcon} {onlineIcon} {member.DisplayName} ({member.Username})");
+                Console.WriteLine($"    Role: {member.Role}");
+                Console.WriteLine($"    Last Login: {member.LastLoginTime:yyyy-MM-dd HH:mm}");
+                Console.WriteLine($"    Failed Attempts: {member.FailedLoginAttempts}/3");
+                
+                if (isLocked && member.AccountLockedUntil.HasValue)
+                {
+                    var timeRemaining = member.AccountLockedUntil.Value.Subtract(DateTime.UtcNow);
+                    Console.WriteLine($"    🕒 Locked for: {Math.Max(0, timeRemaining.Minutes)} more minutes");
+                }
                 Console.WriteLine();
             }
         }

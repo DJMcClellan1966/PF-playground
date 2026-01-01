@@ -112,6 +112,20 @@ namespace PocketFence.FamilyOS.Core
             return member;
         }
 
+        public T GetService<T>() where T : class
+        {
+            if (typeof(T) == typeof(IFamilyManager))
+                return (_familyManager as T) ?? throw new InvalidOperationException("FamilyManager service is not available");
+            if (typeof(T) == typeof(IParentalControls))
+                return (_parentalControls as T) ?? throw new InvalidOperationException("ParentalControls service is not available");
+            if (typeof(T) == typeof(IContentFilter))
+                return (_contentFilter as T) ?? throw new InvalidOperationException("ContentFilter service is not available");
+            if (typeof(T) == typeof(ISystemSecurity))
+                return (_systemSecurity as T) ?? throw new InvalidOperationException("SystemSecurity service is not available");
+            
+            throw new InvalidOperationException($"Service of type {typeof(T).Name} not found");
+        }
+
         public async Task<bool> LaunchAppAsync(string appName, FamilyMember user)
         {
             // Check basic app availability
@@ -177,6 +191,11 @@ namespace PocketFence.FamilyOS.Core
         Task UpdateFamilyMemberAsync(FamilyMember member);
         Task SaveFamilyDataAsync();
         int GetFamilyMemberCount();
+        Task<bool> ChangePasswordAsync(string username, string currentPassword, string newPassword, FamilyMember requestingUser);
+        Task<bool> ResetPasswordAsync(string targetUsername, string newPassword, FamilyMember parentUser);
+        Task<bool> IsAccountLockedAsync(string username);
+        Task UnlockAccountAsync(string username, FamilyMember parentUser);
+        Task<List<string>> GetPasswordChangeHistoryAsync(string username, FamilyMember requestingUser);
     }
 
     /// <summary>
@@ -254,6 +273,10 @@ namespace PocketFence.FamilyOS.Core
         public bool IsOnline { get; set; }
         public DateTime LastLoginTime { get; set; }
         public TimeSpan TotalScreenTimeToday { get; set; }
+        public int FailedLoginAttempts { get; set; } = 0;
+        public DateTime? AccountLockedUntil { get; set; } = null;
+        public DateTime LastPasswordChange { get; set; } = DateTime.UtcNow;
+        public List<DateTime> PasswordChangeHistory { get; set; } = new List<DateTime>();
     }
 
     public class ScreenTimeSettings
