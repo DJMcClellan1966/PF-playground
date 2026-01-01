@@ -6,6 +6,8 @@ $ErrorActionPreference = "Stop"
 
 # Get paths
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Suppress false positive - this variable is used below for csproj path
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'projectDir')]
 $projectDir = Split-Path -Parent $scriptDir  
 $buildPath = Join-Path $scriptDir "Build"
 $releasePath = Join-Path $buildPath "Release"
