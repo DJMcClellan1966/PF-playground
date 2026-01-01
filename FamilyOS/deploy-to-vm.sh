@@ -1,43 +1,6 @@
-#!/bin/bash
-
-# FamilyOS VM Deployment Script
-# Run this inside the Ubuntu VM after OS installation
-
-echo "🚀 Starting FamilyOS deployment to VM..."
-
-# Update system
-echo "📦 Updating system packages..."
-sudo apt update && sudo apt upgrade -y
-
-# Install .NET 8.0
-echo "🔧 Installing .NET 8.0..."
-wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-sudo dpkg -i packages-microsoft-prod.deb
-sudo apt-get update
-sudo apt-get install -y dotnet-sdk-8.0
-
-# Install additional dependencies
-echo "📚 Installing additional dependencies..."
-sudo apt install -y git curl wget htop
-
-# Add user to vboxsf group for shared folders
-echo "🔗 Setting up shared folder access..."
-sudo usermod -aG vboxsf $USER
-
-# Create FamilyOS directory
-echo "📁 Creating FamilyOS directory..."
-mkdir -p ~/FamilyOS
-cd ~/FamilyOS
-
-# Copy FamilyOS files from shared folder (if available)
-if [ -d "/media/sf_familyos-share/FamilyOS" ]; then
-    echo "📋 Copying FamilyOS files from shared folder..."
-    cp -r /media/sf_familyos-share/FamilyOS/* .
-    cp -r /media/sf_familyos-share/*.cs .
-    cp -r /media/sf_familyos-share/*.csproj .
-    cp -r /media/sf_familyos-share/Security.cs .
-else
-    echo "⚠️  Shared folder not mounted. You'll need to manually copy files."
+# Deprecated: Windows-only repository. This Linux/Ubuntu script is removed.
+echo "FamilyOS is Windows-only. Use Windows VM and PowerShell."
+exit 0
     echo "   Mount shared folder with: sudo mount -t vboxsf familyos-share /media/sf_familyos-share"
 fi
 

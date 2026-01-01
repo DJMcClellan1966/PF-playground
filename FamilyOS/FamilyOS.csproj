@@ -6,21 +6,29 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>false</UseWPF>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>PocketFence.FamilyOS</RootNamespace>
     <AssemblyName>FamilyOS</AssemblyName>
     <StartupObject>PocketFence.FamilyOS.Program</StartupObject>
     
-    <!-- Native AOT Performance Optimization (Disabled for deployment) -->
+    <!-- Native AOT Performance Optimization (Disabled for Windows Forms compatibility) -->
     <PublishAot>false</PublishAot>
     <InvariantGlobalization>false</InvariantGlobalization>
-    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <EventSourceSupport>false</EventSourceSupport>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <StripSymbols>false</StripSymbols>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
     
-    <!-- Aggressive Optimization -->
+    <!-- Aggressive Optimization (GPT4All Style) -->
     <OptimizationPreference>Speed</OptimizationPreference>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <OptimizeFramework>true</OptimizeFramework>
     
     <!-- AOT Warnings Suppression for JSON Serialization -->
     <NoWarn>$(NoWarn);IL3050;IL2026;IL2067;IL2070;IL2104;SYSLIB1030</NoWarn>
@@ -34,12 +42,14 @@
     <DebugType>none</DebugType>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     
-    <!-- Performance Release Settings -->
+    <!-- Performance Release Settings (GPT4All Optimized) -->
     <DebuggerSupport>false</DebuggerSupport>
     <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
     <UseNativeHttpHandler>true</UseNativeHttpHandler>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     
     <!-- Startup Performance -->
     <ServerGarbageCollection>false</ServerGarbageCollection>
@@ -56,11 +66,16 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     
     <!-- Additional packages for Stealth Enforcement System -->
     <PackageReference Include="System.Drawing.Common" Version="8.0.11" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
   </ItemGroup>
 
   <ItemGroup>
@@ -89,7 +104,7 @@
 
   <!-- Production deployment configurations -->
   <PropertyGroup>
-    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <PublishSingleFile Condition="'$(PublishAot)' != 'true'">true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>

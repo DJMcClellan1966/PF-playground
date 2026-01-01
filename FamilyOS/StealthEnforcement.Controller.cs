@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.Versioning;
 
 namespace PocketFence.FamilyOS.Stealth
 {
@@ -38,6 +39,7 @@ namespace PocketFence.FamilyOS.Stealth
         /// <summary>
         /// Activate complete stealth enforcement system - all features enabled
         /// </summary>
+        [SupportedOSPlatform("windows")]
         public async Task ActivateCompleteStealthSystemAsync()
         {
             try
@@ -73,6 +75,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task InitializeStealthComponentsAsync()
         {
             _logger.LogInformation("🔧 Initializing stealth system components...");
@@ -95,6 +98,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task ActivateStealthSystemsAsync()
         {
             _logger.LogInformation("🌊 Activating stealth systems in strategic sequence...");
@@ -114,6 +118,7 @@ namespace PocketFence.FamilyOS.Stealth
             _logger.LogInformation("🎯 All stealth systems activated and synchronized");
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task ActivateNetworkControlAsync()
         {
             try
@@ -143,6 +148,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task ActivateHardwareControlAsync()
         {
             try
@@ -173,6 +179,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task ActivateDeceptionSystemsAsync()
         {
             try
@@ -206,6 +213,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task ActivateInvisibleProtectionAsync()
         {
             try
@@ -229,6 +237,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task VerifySystemIntegrityAsync()
         {
             _logger.LogInformation("🔍 Verifying complete system integrity...");
@@ -377,6 +386,7 @@ namespace PocketFence.FamilyOS.Stealth
         /// <summary>
         /// Temporarily disable stealth enforcement for parent access
         /// </summary>
+        [SupportedOSPlatform("windows")]
         public async Task DisableForParentAccessAsync()
         {
             try
@@ -400,6 +410,7 @@ namespace PocketFence.FamilyOS.Stealth
         /// <summary>
         /// Re-enable stealth enforcement after parent access
         /// </summary>
+        [SupportedOSPlatform("windows")]
         public async Task ReenableAfterParentAccessAsync()
         {
             try
@@ -422,6 +433,7 @@ namespace PocketFence.FamilyOS.Stealth
         /// <summary>
         /// Complete shutdown of all stealth systems
         /// </summary>
+        [SupportedOSPlatform("windows")]
         public async Task DeactivateCompleteSystemAsync()
         {
             try

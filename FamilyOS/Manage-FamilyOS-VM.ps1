@@ -51,11 +51,11 @@ function Start-FamilyOSVM {
         Show-VMStatus
         
         Write-ColorOutput Cyan "🎯 Quick Setup Instructions:"
-        Write-Host "1. Install Ubuntu 22.04 LTS if first time"
-        Write-Host "2. Open terminal in VM"
-        Write-Host "3. Run: sudo mount -t vboxsf familyos-share /media/sf_familyos-share"
-        Write-Host "4. Run: bash /media/sf_familyos-share/FamilyOS/deploy-to-vm.sh"
-        Write-Host "5. After deployment: ./start-familyos.sh"
+        Write-Host "1. Install Windows 11 if first time"
+        Write-Host "2. Open PowerShell in VM"
+        Write-Host "3. Map shared folder: \\VBOXSVR\\familyos-share"
+        Write-Host "4. Build: dotnet build; Run: dotnet run"
+        Write-Host "5. Verify: FamilyOS starts and logs appear"
     } catch {
         Write-ColorOutput Red "❌ Failed to start VM"
     }

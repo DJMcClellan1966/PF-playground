@@ -377,4 +377,107 @@ namespace PocketFence.FamilyOS.Core
         public bool RequireParentApprovalForApps { get; set; } = true;
         public bool EnableEducationalPriority { get; set; } = true;
     }
+
+    /// <summary>
+    /// Core interface that all platform implementations must implement
+    /// Defines the contract for FamilyOS functionality across different platforms
+    /// </summary>
+    public interface IPlatformService : IDisposable
+    {
+        string PlatformName { get; }
+        string PlatformVersion { get; }
+        bool IsAdministrator { get; }
+
+        Task<bool> InitializePlatformAsync();
+        Task<PlatformCapabilities> GetPlatformCapabilitiesAsync();
+        Task<bool> ApplyParentalControlsAsync(FamilyMember member, ParentalControlSettings settings);
+        Task<bool> MonitorNetworkActivityAsync(FamilyMember member);
+        Task<List<ProcessInfo>> GetRunningProcessesAsync(FamilyMember member);
+        Task<bool> TerminateProcessAsync(FamilyMember member, int processId, string reason);
+        Task<ScreenTimeData> GetScreenTimeAsync(FamilyMember member, DateTime date);
+        Task<bool> EnableStealthModeAsync(FamilyMember member);
+        Task<bool> InstallFamilyAppAsync(string appPackagePath, FamilyMember installingUser);
+    }
+
+    /// <summary>
+    /// Describes the capabilities and limitations of each platform
+    /// </summary>
+    public class PlatformCapabilities
+    {
+        public bool SupportsParentalControls { get; set; }
+        public bool SupportsContentFiltering { get; set; }
+        public bool SupportsNetworkMonitoring { get; set; }
+        public bool SupportsProcessControl { get; set; }
+        public bool SupportsScreenTimeTracking { get; set; }
+        public bool SupportsStealthMode { get; set; }
+        public bool SupportsHardwareControl { get; set; }
+        public bool SupportsCloudSync { get; set; }
+        public int MaxFamilyMembers { get; set; }
+        public AgeGroup[] SupportedAgeGroups { get; set; } = Array.Empty<AgeGroup>();
+        public string NativeUIFramework { get; set; } = "";
+        public SecurityLevel SecurityLevel { get; set; }
+        public Dictionary<string, object> PlatformSpecificFeatures { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Platform-specific parental control settings
+    /// </summary>
+    public class ParentalControlSettings
+    {
+        public ContentFilterLevel ContentFilterLevel { get; set; } = ContentFilterLevel.Moderate;
+        public TimeSpan? DailyTimeLimit { get; set; }
+        public List<TimeRange> AllowedTimes { get; set; } = new();
+        public List<string> BlockedApplications { get; set; } = new();
+        public List<string> AllowedApplications { get; set; } = new();
+        public List<string> BlockedWebsites { get; set; } = new();
+        public List<string> AllowedWebsites { get; set; } = new();
+        public bool RequireApprovalForDownloads { get; set; }
+        public bool EnableLocationTracking { get; set; }
+        public Dictionary<string, object> PlatformSpecificSettings { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Process information structure
+    /// </summary>
+    public class ProcessInfo
+    {
+        public int ProcessId { get; set; }
+        public string ProcessName { get; set; } = "";
+        public string ExecutablePath { get; set; } = "";
+        public DateTime StartTime { get; set; }
+        public long WorkingSet { get; set; }
+        public bool IsResponding { get; set; }
+        public string UserName { get; set; } = "";
+    }
+
+    /// <summary>
+    /// Screen time tracking data
+    /// </summary>
+    public class ScreenTimeData
+    {
+        public DateTime Date { get; set; }
+        public TimeSpan TotalScreenTime { get; set; }
+        public Dictionary<string, TimeSpan> ApplicationUsage { get; set; } = new();
+        public Dictionary<string, TimeSpan> WebsiteUsage { get; set; } = new();
+        public List<ScreenTimeViolation> Violations { get; set; } = new();
+    }
+
+    public class ScreenTimeViolation
+    {
+        public DateTime Timestamp { get; set; }
+        public string Application { get; set; } = "";
+        public string Reason { get; set; } = "";
+        public TimeSpan Duration { get; set; }
+    }
+
+    /// <summary>
+    /// Additional enumerations for platform support
+    /// </summary>
+    public enum SecurityLevel
+    {
+        Basic,
+        Standard,
+        Enhanced,
+        Enterprise
+    }
 }

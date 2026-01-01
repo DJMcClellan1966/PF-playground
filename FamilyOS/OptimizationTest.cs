@@ -1,23 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
-namespace FamilyOSOptimizationTest
-{
-    class Program
-    {
-        static async Task RunOptimizationTest(string[] args)
+        using System;
+        using System.Collections.Generic;
+        using System.Diagnostics;
+        using System.Linq;
+        using System.Threading.Tasks;
+        
+        namespace FamilyOS
         {
-            Console.WriteLine("FamilyOS CPU and Memory Optimization Test");
-            Console.WriteLine("========================================");
-            Console.WriteLine();
-
-            await RunOptimizationComparisonTests();
-        }
-
-        static async Task RunOptimizationComparisonTests()
-        {
+            public class OptimizationTest
+            {
+                public static async Task RunOptimizationTests()
+                {
             var results = new List<string>();
 
             Console.WriteLine("Testing Optimizations Impact...");

@@ -5,7 +5,9 @@ using PocketFence.FamilyOS.Core;
 using PocketFence.FamilyOS.Services;
 using PocketFence.FamilyOS.Apps;
 using PocketFence.FamilyOS.UI;
+using PocketFence.FamilyOS.Examples;
 using System;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace PocketFence.FamilyOS
@@ -18,6 +20,27 @@ namespace PocketFence.FamilyOS
     {
         static async Task Main(string[] args)
         {
+            // Performance optimization tests mode
+            if (args.Length > 0 && args[0].Equals("--perf-opt", StringComparison.OrdinalIgnoreCase))
+            {
+                await global::FamilyOS.OptimizationTest.RunOptimizationTests();
+                return;
+            }
+
+            // Check for demo mode
+            if (args.Length > 0 && args[0].Equals("--demo-windows", StringComparison.OrdinalIgnoreCase))
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    await RunWindowsDemo();
+                }
+                else
+                {
+                    Console.WriteLine("❌ Windows demo mode is only available on Windows platform.");
+                }
+                return;
+            }
+
             // Enhanced startup with modern UI
             await FamilyOSUI.ShowWelcomeHeaderAsync();
 
@@ -653,6 +676,12 @@ namespace PocketFence.FamilyOS
 
             Console.WriteLine();
             return password;
+        }
+
+        [SupportedOSPlatform("windows")]
+        static async Task RunWindowsDemo()
+        {
+            await WindowsQuickTest.RunWindowsDemo();
         }
     }
 }

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using System.Runtime.Versioning;
 
 namespace PocketFence.FamilyOS.Stealth
 {
@@ -47,6 +48,7 @@ namespace PocketFence.FamilyOS.Stealth
             _logger = logger;
         }
 
+        [SupportedOSPlatform("windows")]
         public async Task ActivateStealthModeAsync()
         {
             try
@@ -78,6 +80,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task HideWindowsTaskbarAsync()
         {
             try
@@ -105,6 +108,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task CreateStealthDesktopAsync()
         {
             await Task.Run(() =>
@@ -137,6 +141,7 @@ namespace PocketFence.FamilyOS.Stealth
             });
         }
 
+        [SupportedOSPlatform("windows")]
         private void SetDesktopWallpaper()
         {
             try
@@ -160,6 +165,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private string GetCurrentWallpaperPath()
         {
             try
@@ -175,6 +181,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private void CreateFakeDesktopIcons()
         {
             var commonIcons = new[]
@@ -206,6 +213,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private void CreateFakeTaskbar()
         {
             var fakeTaskbar = new Panel
@@ -259,6 +267,7 @@ namespace PocketFence.FamilyOS.Stealth
             clockTimer.Start();
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task CreateFakeSystemTrayAsync()
         {
             await Task.Run(() =>
@@ -280,6 +289,7 @@ namespace PocketFence.FamilyOS.Stealth
             });
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task RegisterGlobalHotkeysAsync()
         {
             await Task.Run(() =>
@@ -303,6 +313,7 @@ namespace PocketFence.FamilyOS.Stealth
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vlc);
 
+        [SupportedOSPlatform("windows")]
         private void LaunchFakeApplication(string appName)
         {
             _logger.LogInformation($"Child attempted to launch: {appName}");
@@ -324,6 +335,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeBrowser()
         {
             // Launch FamilyOS safe browser but make it look like Chrome
@@ -349,6 +361,7 @@ namespace PocketFence.FamilyOS.Stealth
             _logger.LogInformation("Launched fake Chrome browser (actually FamilyOS safe browser)");
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeFileExplorer()
         {
             // Show fake file explorer with safe content only
@@ -382,6 +395,7 @@ namespace PocketFence.FamilyOS.Stealth
             _logger.LogInformation("Launched fake File Explorer with curated content");
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeSystemProperties()
         {
             var systemProps = new Form
@@ -422,6 +436,7 @@ namespace PocketFence.FamilyOS.Stealth
             _logger.LogInformation("Displayed fake system properties with family safety status");
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeStartMenu()
         {
             var startMenu = new Form
@@ -464,18 +479,21 @@ namespace PocketFence.FamilyOS.Stealth
             startMenu.LostFocus += (sender, e) => startMenu.Close();
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeWindowsUpdate()
         {
             MessageBox.Show("Windows is up to date.\n\nLast checked: " + DateTime.Now.ToString(), 
                 "Windows Update", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeNetworkSettings()
         {
             MessageBox.Show("Network Status: Connected\nInternet Access: Available\n\nAll network settings are managed by your administrator.", 
                 "Network Settings", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeSystemInfo()
         {
             var systemInfo = $"Computer Name: {Environment.MachineName}\n" +
@@ -487,12 +505,14 @@ namespace PocketFence.FamilyOS.Stealth
             MessageBox.Show(systemInfo, "System Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowGenericFakeApp(string appName)
         {
             MessageBox.Show($"{appName} is starting...\n\nThis application is monitored for family safety.", 
                 "Application Launch", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task StartStealthMonitoringAsync()
         {
             var monitorTimer = new System.Windows.Forms.Timer { Interval = 5000 }; // Check every 5 seconds
@@ -502,6 +522,7 @@ namespace PocketFence.FamilyOS.Stealth
             await Task.CompletedTask;
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task MaintainStealthModeAsync()
         {
             try
@@ -528,6 +549,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         public async Task DeactivateStealthModeAsync()
         {
             try

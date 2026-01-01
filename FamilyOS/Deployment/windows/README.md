@@ -52,10 +52,10 @@ PocketFence FamilyOS is a secure, family-friendly computing environment designed
 ### Prerequisites
 - [.NET 8.0](https://dotnet.microsoft.com/download) or later
 - PocketFence AI Kernel (included in main project)
-- Windows, macOS, or Linux
+- Windows 10/11 (Windows-only)
 
 ### Quick Start
-```bash
+```powershell
 # Navigate to FamilyOS directory
 cd FamilyOS
 
@@ -144,7 +144,7 @@ Adjust time limits per age group:
 ## 🛠️ Family Management
 
 ### Adding Family Members
-```bash
+```powershell
 # From FamilyOS main menu (Parent access required)
 8. Family Management
    → Add New Family Member

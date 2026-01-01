@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
@@ -29,6 +30,7 @@ namespace PocketFence.FamilyOS.Stealth
             };
         }
 
+        [SupportedOSPlatform("windows")]
         public async Task ActivateHoneypotSystemAsync()
         {
             try
@@ -54,6 +56,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task RegisterSecretHotkeysAsync()
         {
             await Task.Run(() =>
@@ -89,6 +92,7 @@ namespace PocketFence.FamilyOS.Stealth
             });
         }
 
+        [SupportedOSPlatform("windows")]
         public void ShowFakeTaskManager()
         {
             _logger.LogInformation("🕵️ Child attempted to access Task Manager - showing fake version");
@@ -148,6 +152,7 @@ namespace PocketFence.FamilyOS.Stealth
             fakeTaskManager.Show();
         }
 
+        [SupportedOSPlatform("windows")]
         private void AddFakeProcessesToList(ListView listView)
         {
             var random = new Random();
@@ -188,6 +193,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private void HandleFakeProcessKill(ListView listView)
         {
             if (listView.SelectedItems.Count > 0)
@@ -217,6 +223,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private void ShowFakeProcessDetailsDialog(ListView listView)
         {
             if (listView.SelectedItems.Count > 0)
@@ -240,6 +247,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private Panel CreateFakePerformanceTab()
         {
             var panel = new Panel();
@@ -261,6 +269,7 @@ namespace PocketFence.FamilyOS.Stealth
             return panel;
         }
 
+        [SupportedOSPlatform("windows")]
         private Panel CreateFakeUsersTab()
         {
             var panel = new Panel();
@@ -290,6 +299,7 @@ namespace PocketFence.FamilyOS.Stealth
             return panel;
         }
 
+        [SupportedOSPlatform("windows")]
         public void ShowFakeDeveloperConsole()
         {
             _logger.LogInformation("🔧 Child attempted to access developer console - showing fake version");
@@ -361,6 +371,7 @@ Type 'help' for more information.
 >";
         }
 
+        [SupportedOSPlatform("windows")]
         private void ProcessFakeConsoleCommand(string command, TextBox output)
         {
             _logger.LogInformation($"🕵️ Child entered console command: {command}");
@@ -432,6 +443,7 @@ Contact your system administrator for assistance.
 Returning to user mode...";
         }
 
+        [SupportedOSPlatform("windows")]
         public void ShowFakeRunDialog()
         {
             _logger.LogInformation("🏃 Child attempted to access Run dialog - showing fake version");
@@ -479,6 +491,7 @@ Returning to user mode...";
             textBox.Focus();
         }
 
+        [SupportedOSPlatform("windows")]
         private void ProcessRunCommand(string command, Form dialog)
         {
             _logger.LogWarning($"🎯 Child attempted to run command: {command}");

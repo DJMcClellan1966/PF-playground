@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
@@ -31,6 +32,7 @@ namespace PocketFence.FamilyOS.Stealth
             _isParentModeActive = false;
         }
 
+        [SupportedOSPlatform("windows")]
         public async Task ActivateUsbControlSystemAsync()
         {
             try
@@ -192,6 +194,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task StartUsbMonitoringAsync()
         {
             await Task.Run(() =>
@@ -212,6 +215,7 @@ namespace PocketFence.FamilyOS.Stealth
             });
         }
 
+        [SupportedOSPlatform("windows")]
         private async void OnUsbDeviceChanged(object sender, EventArrivedEventArgs e)
         {
             try
@@ -242,6 +246,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task HandleUsbDeviceInsertedAsync(string driveName)
         {
             try
@@ -270,6 +275,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task<string> GetUsbDeviceIdAsync(string driveName)
         {
             try
@@ -430,6 +436,7 @@ namespace PocketFence.FamilyOS.Stealth
             _logger.LogDebug("Emergency parent permissions granted");
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task HandleUsbDeviceRemovedAsync(string driveName)
         {
             try
@@ -545,6 +552,7 @@ namespace PocketFence.FamilyOS.Stealth
             // - Increase monitoring
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task StartDongleVerificationAsync()
         {
             _dongleMonitorTimer = new System.Threading.Timer(async _ => await VerifyConnectedDonglesAsync(),
@@ -553,6 +561,7 @@ namespace PocketFence.FamilyOS.Stealth
             await Task.CompletedTask;
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task VerifyConnectedDonglesAsync()
         {
             try
@@ -577,6 +586,7 @@ namespace PocketFence.FamilyOS.Stealth
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task<List<string>> GetCurrentUsbDevicesAsync()
         {
             var currentDevices = new List<string>();
@@ -608,6 +618,7 @@ namespace PocketFence.FamilyOS.Stealth
             return currentDevices;
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task ScanForExistingUsbDevicesAsync()
         {
             try
@@ -733,6 +744,7 @@ namespace PocketFence.FamilyOS.Stealth
             return _authorizedDongles.Values.Select(p => p.Name).ToList();
         }
 
+        [SupportedOSPlatform("windows")]
         public async Task DeactivateUsbControlSystemAsync()
         {
             try

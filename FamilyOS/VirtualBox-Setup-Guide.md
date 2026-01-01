@@ -5,46 +5,9 @@
 - Internet connection for downloading dependencies
 - 8GB+ RAM on host machine (recommended)
 
-## Option 1: Ubuntu 22.04 LTS Setup (Recommended)
+## (Windows-only) Virtual Machine Setup
 
-### 1. Create Ubuntu VM
-```bash
-# VM Settings
-- Name: FamilyOS-Ubuntu-Test
-- Type: Linux
-- Version: Ubuntu (64-bit)
-- RAM: 4096 MB (4GB)
-- Storage: 25 GB VDI (dynamically allocated)
-```
-
-### 2. Install Ubuntu and Dependencies
-```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
-
-# Install .NET 8.0
-wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb
-sudo dpkg -i packages-microsoft-prod.deb
-sudo apt update
-sudo apt install -y dotnet-sdk-8.0
-
-# Verify installation
-dotnet --version
-```
-
-### 3. Install FamilyOS
-```bash
-# Clone or copy FamilyOS files
-mkdir ~/familyos
-cd ~/familyos
-
-# Copy FamilyOS source files here
-# (Transfer via shared folder, USB, or git clone)
-
-# Build and run
-dotnet build
-dotnet run
-```
+FamilyOS is Windows-only. Use a Windows 11 VM for testing.
 
 ## Option 2: Windows 11 Setup
 
@@ -86,13 +49,6 @@ dotnet run
 2. Add folder from host containing FamilyOS source
 3. Mount in guest OS:
 
-**Ubuntu:**
-```bash
-sudo mkdir /mnt/familyos
-sudo mount -t vboxsf familyos-share /mnt/familyos
-cd /mnt/familyos/FamilyOS
-```
-
 **Windows:**
 ```
 Map Network Drive → \\VBOXSVR\familyos-share
@@ -123,17 +79,17 @@ Map Network Drive → \\VBOXSVR\familyos-share
 ## VM Network Configuration
 
 ### For PocketFence API Integration
-```bash
-# If running PocketFence Kernel on host:
-# Use Bridged Adapter for direct network access
-# Or Port Forwarding: Host 5000 → Guest 5000
+```text
+If running PocketFence Kernel on host:
+- Use Bridged Adapter for direct network access
+- Or Port Forwarding: Host 5000 → Guest 5000
 
-# VirtualBox Network Settings:
-# Adapter 1: NAT (for internet)
-# Advanced → Port Forwarding:
-#   Name: PocketFence-API
-#   Host Port: 5000
-#   Guest Port: 5000
+VirtualBox Network Settings:
+- Adapter 1: NAT (for internet)
+- Advanced → Port Forwarding:
+  Name: PocketFence-API
+  Host Port: 5000
+  Guest Port: 5000
 ```
 
 ## Snapshot Strategy
@@ -144,59 +100,35 @@ Map Network Drive → \\VBOXSVR\familyos-share
 3. **With Family Data** - Pre-configured family profiles
 4. **Performance Baseline** - Known good state
 
-```bash
-# VirtualBox CLI snapshots
-VBoxManage snapshot "FamilyOS-Ubuntu-Test" take "Base-Setup"
-VBoxManage snapshot "FamilyOS-Ubuntu-Test" take "FamilyOS-Installed"
-VBoxManage snapshot "FamilyOS-Ubuntu-Test" take "Family-Configured"
+```powershell
+# VirtualBox CLI snapshots (Windows host)
+VBoxManage snapshot "FamilyOS-Windows-Test" take "Base-Setup"
+VBoxManage snapshot "FamilyOS-Windows-Test" take "FamilyOS-Installed"
+VBoxManage snapshot "FamilyOS-Windows-Test" take "Family-Configured"
 ```
 
 ## Automation Script
 
-### Ubuntu Auto-Setup Script
-```bash
-#!/bin/bash
-# save as setup-familyos.sh
+Windows automation can be done via PowerShell and Chocolatey. Example:
+```powershell
+# Install .NET 8 SDK (if not installed)
+# Download from https://dotnet.microsoft.com/download/dotnet/8.0
 
-echo "🏠 Setting up FamilyOS Testing Environment..."
+# Install Git (optional)
+winget install Git.Git
 
-# Update system
-sudo apt update -y
-
-# Install .NET 8.0
-wget -q https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb
-sudo dpkg -i packages-microsoft-prod.deb
-sudo apt update
-sudo apt install -y dotnet-sdk-8.0
-
-# Install additional tools
-sudo apt install -y git curl wget
-
-# Create FamilyOS directory
-mkdir -p ~/familyos-test
-cd ~/familyos-test
-
-echo "✅ Environment ready for FamilyOS deployment!"
-echo "📁 Working directory: $(pwd)"
-echo "🔧 .NET Version: $(dotnet --version)"
+# Verify
+dotnet --info
 ```
 
 ## Performance Monitoring
 
 ### VM Resource Monitoring
-```bash
-# Ubuntu - Monitor FamilyOS performance
-sudo apt install htop
-htop
-
-# Check .NET process
-ps aux | grep dotnet
-
-# Memory usage
-free -h
-
-# Disk usage
-df -h
+```powershell
+# Windows - Monitor FamilyOS performance
+taskmgr
+resmon
+Get-Process -Name "*dotnet*" | Select-Object Name, CPU, WorkingSet
 ```
 
 ### Windows Performance
@@ -221,38 +153,27 @@ Get-Process -Name "*dotnet*" | Select-Object Name, CPU, WorkingSet
 - ✅ Controlled internet access
 
 ### Testing Scenarios
-```bash
-# Test content filtering
-curl -X POST http://localhost:5000/api/filter/url \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://example.com"}'
-
-# Test family authentication
-# Login as different family members
-
-# Test screen time controls
-# Simulate extended usage periods
-
-# Test parental controls
-# Attempt access to restricted content
-```
+- Test content filtering via API (from inside FamilyOS)
+- Login as different family members to validate authentication
+- Simulate extended usage to test screen time controls
+- Attempt restricted content to verify parental controls
 
 ## CI/CD Integration
 
 ### Automated VM Testing
 ```yaml
-# GitHub Actions example
+# GitHub Actions example (Windows runner)
 name: FamilyOS VM Tests
 on: [push, pull_request]
 
 jobs:
   vm-test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - name: Setup VirtualBox
       run: |
-        sudo apt-get install virtualbox
+        choco install virtualbox -y
         # Additional VM setup automation
 ```
 
@@ -268,7 +189,7 @@ jobs:
 | .NET errors | Verify SDK installation |
 
 ### Debug Commands
-```bash
+```powershell
 # Check .NET installation
 dotnet --info
 
@@ -276,8 +197,7 @@ dotnet --info
 dotnet build --verbosity normal
 
 # Check network connectivity
-ping google.com
-curl http://localhost:5000/api/kernel/health
+Test-NetConnection -ComputerName "localhost" -Port 5000
 ```
 
 ## Production Deployment Notes

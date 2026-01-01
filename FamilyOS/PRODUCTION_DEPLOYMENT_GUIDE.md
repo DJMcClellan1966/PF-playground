@@ -2,7 +2,7 @@
 
 ## 📦 Deployment Package Contents
 
-Your FamilyOS application has been successfully compiled and packaged for production deployment across multiple platforms:
+Your FamilyOS application has been successfully compiled and packaged for production deployment on Windows only:
 
 ### 📁 Deployment Structure
 ```
@@ -12,14 +12,7 @@ deployment/
 │   ├── start-familyos.bat
 │   ├── appsettings.production.json
 │   └── FamilyData/   # Family configuration data
-├── linux/            # Linux x64 deployment  
-│   ├── FamilyOS      # Main executable
-│   ├── start-familyos.sh
-│   └── appsettings.production.json
-└── macos/            # macOS x64 deployment
-    ├── FamilyOS      # Main executable
-    ├── start-familyos.command
-    └── appsettings.production.json
+└── (Windows-only deployment)
 ```
 
 ## 🎯 Production Features Enabled
@@ -36,10 +29,8 @@ deployment/
 - Efficient memory usage (512MB max)
 - Fast startup and response times
 
-✅ **Multi-Platform Support**
+✅ **Platform Support**
 - Windows 10/11 (x64)
-- Linux distributions (x64)
-- macOS 10.15+ (x64)
 
 ## 🚀 Installation Instructions
 
@@ -48,17 +39,8 @@ deployment/
 2. Run `start-familyos.bat` as Administrator (recommended)
 3. Or double-click `FamilyOS.exe` directly
 
-### Linux Deployment
-1. Copy the `linux/` folder to target machine
-2. Make executable: `chmod +x FamilyOS start-familyos.sh`
-3. Run: `./start-familyos.sh`
-4. Ensure .NET 8.0 runtime is installed (or use self-contained)
-
-### macOS Deployment
-1. Copy the `macos/` folder to Applications or desired location
-2. Right-click `start-familyos.command` → Open
-3. Grant permission when prompted
-4. Or run from Terminal: `./FamilyOS`
+### (Windows-only) Other Platforms
+Not applicable. FamilyOS is currently Windows-only.
 
 ## ⚙️ Production Configuration
 
@@ -105,11 +87,8 @@ The `appsettings.production.json` file contains optimized settings:
 - Change port in `appsettings.production.json`
 - Use environment variable: `ASPNETCORE_URLS=https://localhost:5002`
 
-**Permission Denied (Linux/macOS):**
-```bash
-chmod +x FamilyOS
-chmod +x start-familyos.*
-```
+**Permission Denied:**
+Run installer or `FamilyOS.exe` as Administrator (recommended).
 
 **Firewall Blocking:**
 - Allow FamilyOS.exe through Windows Firewall
@@ -118,8 +97,6 @@ chmod +x start-familyos.*
 ### Log Files
 Production logs are written to:
 - **Windows**: `%TEMP%\FamilyOS\logs\`
-- **Linux**: `/tmp/FamilyOS/logs/`
-- **macOS**: `/tmp/FamilyOS/logs/`
 
 ## 🌐 Network Deployment
 

@@ -12,8 +12,6 @@
 ### ❌ Not Supported
 - Windows 8.1 or older
 - Windows Server editions
-- macOS (Future release planned)
-- Linux (Future release planned)
 
 ## 💾 Hardware Requirements
 
